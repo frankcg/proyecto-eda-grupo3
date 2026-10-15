@@ -1,0 +1,100 @@
+\subsection{Demostración de punta a punta}\label{sec:demo}
+Con 300\,000 eventos (\texttt{scripts/demo.py}, salida completa en \texttt{docs/demo\_output.txt}) el pipeline procesa el stream a $\sim$12\,000 eventos/s;
+con 1M eventos, a 7\,600 eventos/s, y con 10M, a 7\,674 eventos/s (Tabla~\ref{tab:pipe}). Ejemplos de recorridos registrados por el trazador:
+(i) una \textbf{compra express} entra en la FIFO, E1 la valida y verifica por búsqueda binaria que no es duplicada, E2 la inserta con prioridad 2 y sale del heap sin
+esperar, E3 la enriquece (producto, precio), E4 indexa su orden en el B+Tree, E6 la aprueba, E7 la usa en los conjuntos de compradores, E8 la incorpora al grafo de la
+ventana y E9 devuelve un Top-5 para el usuario; (ii) un \textbf{intento de pago} de una ráfaga supera el umbral del CMS, se bloquea y la alerta re-inyectada se atiende
+con prioridad 0; (iii) un registro con precio negativo se rechaza en E1 y una re-entrega duplicada se elimina en E1. En ningún tamaño los pagos, alertas o compras
+esperaron en el heap (0 \emph{ticks}); solo las vistas/búsquedas esperaron en los picos (0.47–0.66 \emph{ticks} en promedio). Los positivos del Bloom se
+verificaron en la tabla hash antes de bloquear: 0 bloqueos erróneos.
+
+\begin{table}[H]\centering\small
+\caption{Pipeline completo (20\,000 productos, micro-lote 5\,000; 10\,000 en 10M). Costo por etapa en µs por elemento que la etapa procesa.}\label{tab:pipe}
+\resizebox{\linewidth}{!}{\input{tabla_pipeline.tex}}
+\end{table}
+\vspace{-6pt}
+La etapa más costosa por elemento es E7 (reconstrucción del LSH y, sobre todo, la construcción del HNSW de 20\,000 productos, 40\,s fijos de inicialización), seguida
+por E6 (Bloom + dos CMS escalares por pago, 63–99\,µs) y E5 (KD-Tree, $\sim$37\,µs, mitigado por un LRU con 69\,\% de aciertos). E0–E4 cuestan 4–15\,µs por evento.
+
+\subsection{Estructuras base (E0–E5, E9)}
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../../experiments/figures/fig_base_loglog.png}
+\caption{Escalabilidad log-log (media $\pm$ desviación estándar) de las estructuras base frente a referencias en C y alternativas ingenuas; en la leyenda, la pendiente
+ajustada $b$ de $t\propto n^b$ entre $10^3$ y el mayor tamaño medido ($10^7$ salvo las alternativas cuadráticas y el Trie).}\label{fig:base}
+\end{figure}
+\begin{table}[H]\centering
+\caption{Pendiente ajustada $b$ ($t\propto n^b$, de $10^3$ al mayor tamaño medido) frente a la esperada; para latencias por consulta, $b\approx0$ indica costo sublineal.}\label{tab:slopes}
+\input{tabla_pendientes.tex}
+\end{table}
+\vspace{-6pt}
+Las pendientes confirman las complejidades esperadas (Tabla~\ref{tab:slopes}): FIFO propia 1.08 frente a 2.01 de \texttt{list.pop(0)}; Merge Sort 1.21 y heap 1.15
+($n\log n$; algo por encima del 1.1 ideal por efectos de caché y asignación de memoria en $10^7$); tabla hash 1.09 (\Oh{1} por operación, 1.3–1.4 sondeos por operación con carga $\le$0.7); B+Tree \emph{bulk load} 1.09 (lineal) frente a 1.68 del
+arreglo ordenado con \texttt{insort} (cuadrático por desplazamientos). El B+Tree con inserciones aleatorias tiene pendiente 1.36 porque desde $10^6$ claves
+(7\,418 páginas) el árbol ya no cabe en el \emph{buffer pool} de 1\,024 páginas: cada inserción paga lecturas y escrituras de página reales (9.4M escrituras con
+$10^7$ claves). Aun así, con $10^7$ claves la altura es 4 y una búsqueda puntual cuesta 1.7 lecturas de disco y 23\,µs; un rango de 10\,000 claves, 1.7\,ms. El
+KD-Tree 4D responde KNN exacto en 0.15–0.19\,ms visitando 68–94 nodos tanto con $10^6$ como con $10^7$ puntos (pendiente 0.09), frente a 11\,ms y 211\,ms de la
+fuerza bruta (1\,100$\times$ en $10^7$). El Trie responde autocompletado en 1–1.8\,µs independientemente de $n$ (pendiente 0.08) frente a 963\,ms del escaneo lineal con $10^6$ nombres.
+Las referencias en C son 3–15$\times$ más rápidas en tiempo constante, como se espera de Python interpretado; la forma de las curvas es la misma.
+\emph{Memoria pico} con $10^7$: FIFO 457\,MB, heap 1.29\,GB (tuplas), tabla hash 256\,MB (frente a 320\,MB de \texttt{dict}), KD-Tree 309\,MB y B+Tree 14\,MB en RAM
+(282\,MB de páginas en disco). Límite: el Trie con $10^6$ nombres ocupa 1.7\,GB (4.3M nodos con su top-$K$ cacheado), por lo que $10^7$ nombres
+($\approx$17\,GB) no cabe en 7.8\,GB y no se ejecutó; un catálogo real de comercio electrónico rara vez supera $10^6$ productos, y la alternativa sería un trie
+comprimido (radix) o un FST.
+
+\subsection{Filtrado probabilístico (E6)}
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../../experiments/figures/fig_probabilisticas.png}
+\caption{Bloom Filter frente a \texttt{set} (tiempo y memoria), CMS frente a \texttt{Counter} (memoria) y FPR empírica del Bloom frente a la teórica.}\label{fig:prob}
+\end{figure}
+\vspace{-6pt}
+\begin{table}[H]\centering\small
+\caption{Estructuras probabilísticas frente a la alternativa exacta (memoria retenida medida con tracemalloc; RSS en $10^7$).}\label{tab:prob}
+\resizebox{\linewidth}{!}{\input{tabla_prob.tex}}
+\end{table}
+\vspace{-6pt}
+El Bloom Filter cumple la FPR teórica en todos los tamaños (1.008\,\% medida frente a 1.004\,\% teórica con $10^7$ claves; 0.101\,\% frente a 0.100\,\% con $p=0.1\,\%$) y
+nunca da falsos negativos, con 9.6 bits por elemento: \textbf{11\,MB frente a 594\,MB} del \texttt{set} exacto con $10^7$ claves (52$\times$ menos). El tiempo es del mismo
+orden que el del \texttt{set} (ambos lineales; el \texttt{set} es C nativo), así que la ventaja del Bloom es de \textbf{memoria}, no de velocidad, y por eso se usa como
+filtro frente a la verificación exacta. El CMS ocupa 104\,KB constantes ($w=2\,719$, $d=5$) frente a 72\,MB del \texttt{Counter} con $\sim$950\,000 claves distintas;
+nunca subestimó y el 100\,\% de las estimaciones quedó dentro de la cota $\varepsilon N$. El precio es el error aditivo: con $N=10^7$ el error medio es 1\,505 y el
+error relativo en los 100 más frecuentes es 12\,\%; en el pipeline la ventana de 5 minutos mantiene $N$ pequeño y el error es despreciable frente al umbral de 15.
+
+\subsection{Similitud aproximada (E7)}
+\begin{figure}[H]\centering
+\includegraphics[width=0.36\linewidth]{../../experiments/figures/fig_lsh_curva.png}\hfill
+\includegraphics[width=0.63\linewidth]{../../experiments/figures/fig_similitud_ab.png}
+\caption{Izquierda: curvas S teóricas de LSH y recall medido para varias $(b,r)$. Centro: latencia por consulta frente a $n$. Derecha: HNSW, recall@10 frente a latencia al variar $ef$ ($n=10^5$).}\label{fig:lsh}\label{fig:sim}
+\end{figure}
+\vspace{-6pt}
+\begin{table}[H]\centering\small
+\caption{Técnicas aproximadas frente a fuerza bruta / KNN exacto (consultas top-10).}\label{tab:sim}
+\resizebox{\linewidth}{!}{\input{tabla_sim.tex}}
+\end{table}
+\vspace{-6pt}
+\textbf{MinHash+LSH.} La consulta cuesta $\sim$0.2\,ms casi constante (pendiente 0.06) porque compara solo $\sim$10 candidatos; la fuerza bruta crece linealmente
+(84\,ms en $10^6$ y 2.1\,s por consulta en $10^7$): \textbf{$\sim$9\,000$\times$ más rápido en $10^7$ con recall 1.0} para los vecinos con $J\ge0.5$. El recall sobre el top-10 completo
+es 0.15–0.25 porque, más allá de los casi-duplicados, los vecinos tienen $J\approx0$ y LSH está diseñado para no verlos. El costo es la memoria: el índice ocupa
+2.4\,GB frente a 458\,MB de los conjuntos en $10^7$ y se construye en 233\,s. La curva S (Fig.~\ref{fig:lsh}) muestra el compromiso: $16\times4$ (umbral 0.5) pierde 21\,\%
+de los vecinos con $J\ge0.5$; $8\times8$, el 65\,\%; $32\times2$ los recupera todos con 10 candidatos y $64\times2$ con 16.
+\textbf{HNSW.} Con $10^6$ vectores de 32 dimensiones responde en 0.84\,ms con recall@10 = 0.989, frente a 45\,ms del KNN exacto (54$\times$); con $10^5$, $ef=10$ da 0.986
+en 0.24\,ms y $ef\ge50$ da recall 1.0. La construcción es el cuello de botella en Python (2.5–3.3\,ms por inserción; 55 minutos para $10^6$): con $10^7$ serían
+$\sim$10 horas, por lo que el experimento de HNSW llega a $10^6$ (en C, \texttt{hnswlib} construye $10^7$ en minutos). El KD-Tree en 32D visita el 82\,\% de los nodos
+y es más lento que la fuerza bruta (161\,ms frente a 45\,ms): evidencia directa de la maldición de la dimensionalidad que justifica usar KD-Tree solo en 4D (E5).
+
+\subsection{Grafo: influencia y comunidades (E8)}
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../../experiments/figures/fig_grafo.png}
+\caption{Grafo con comunidades plantadas (70\,\% de aristas internas, grados Zipf, $n/8$ nodos): tiempo, modularidad (media $\pm$ std) y estabilidad/recuperación (NMI).}\label{fig:grafo}
+\end{figure}
+\vspace{-6pt}
+\begin{table}[H]\centering\small
+\caption{Louvain frente a Label Propagation en el mismo grafo (media sobre 10 semillas; 5 en $10^6$; 2 en $10^7$).}\label{tab:com}
+\resizebox{\linewidth}{!}{\input{tabla_com.tex}}
+\end{table}
+\vspace{-6pt}
+\textbf{PageRank} converge en 38–42 iteraciones con costo lineal en $m$ (pendiente 1.07; 8.6\,s con 8.6M aristas). En un grafo no dirigido su correlación con el grado es
+alta (Spearman 0.985; 95–99\,\% de coincidencia en el top-100), por lo que su valor diferencial está en la versión \textbf{personalizada}, que el ranking por grado no puede
+dar: PPR desde el carrito es la señal con mayor peso del recomendador. \textbf{Comunidades:} en el grafo sintético ambos algoritmos alcanzan modularidades parecidas, pero
+Louvain es \textbf{casi determinista} (NMI entre semillas 0.985–0.999 frente a 0.91–0.945; desviación de $Q\le2\cdot10^{-4}$ frente a hasta $2\cdot10^{-2}$ en LPA) y \textbf{no fragmenta}:
+LPA deja miles de comunidades diminutas (mediana 2 nodos, 4\,722 comunidades en $10^7$ frente a 553). LPA es $\sim$2$\times$ más rápido. En el grafo de co-compra
+\emph{real} del pipeline (1M eventos, 5\,681 productos, 15\,390 aristas), la diferencia es clara: Louvain $Q=0.755\pm0.002$ con 221 comunidades frente a LPA
+$Q=0.630\pm0.011$ con 848; las comunidades de Louvain agrupan categorías complementarias plantadas (en la demo, la mayor reúne 91 laptops con 43 mouse, 42 teclados y 26 monitores).

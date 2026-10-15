@@ -1,0 +1,11 @@
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llrrrlll@{}}\toprule
+Técnica & $n$ & Consulta aprox. & Exacto & Aceleración & Recall & Memoria (índice/datos) & Construcción \\\midrule
+MinHash+LSH (32$\times$2) & $10^4$ & 0.16 ms & 0.5 ms & 3$\times$ & 1.00 (J$\ge$0.5) & 3.7 MB / 471 KB & 117.39 ms \\
+MinHash+LSH (32$\times$2) & $10^5$ & 0.17 ms & 5.4 ms & 31$\times$ & 1.00 (J$\ge$0.5) & 36.6 MB / 4.6 MB & 2.77 s \\
+MinHash+LSH (32$\times$2) & $10^6$ & 0.19 ms & 84.4 ms & 438$\times$ & 1.00 (J$\ge$0.5) & 366.2 MB / 45.8 MB & 30.64 s \\
+MinHash+LSH (32$\times$2) & $10^7$ & 0.22 ms & 2\,057.7 ms & 9\,231$\times$ & 1.00 (J$\ge$0.5) & 2.40 GB / 457.8 MB & 232.62 s \\
+HNSW ($M$=16, $ef$=50) & $10^4$ & 0.42 ms & 0.3 ms & 0.6$\times$ & 1.000 (@10) & 4.7 MB / 1.2 MB & 29.08 s \\
+HNSW ($M$=16, $ef$=50) & $10^5$ & 0.53 ms & 2.7 ms & 5.1$\times$ & 1.000 (@10) & 48.9 MB / 12.2 MB & 296.74 s \\
+HNSW ($M$=16, $ef$=50) & $10^6$ & 0.84 ms & 45.2 ms & 53.9$\times$ & 0.989 (@10) & 321.4 MB / 122.1 MB & 3324.31 s \\
+\bottomrule\end{tabular}

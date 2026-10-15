@@ -1,0 +1,10 @@
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llllll@{}}\toprule
+Comparación & $n$ & Construir (aprox./exacto) & Consultar $2n$ & Memoria (aprox./exacto) & Calidad \\\midrule
+Bloom ($p$=1\,\%) vs \texttt{set} & $10^5$ & 13.46 ms / 5.19 ms & 24.36 ms / 10.71 ms & 118 KB / 7.4 MB & FPR 1.011\,\% (teórica 1.004\,\%), FN = 0 \\
+Bloom ($p$=1\,\%) vs \texttt{set} & $10^6$ & 189.92 ms / 89.68 ms & 300.52 ms / 144.64 ms & 1.1 MB / 65.8 MB & FPR 1.000\,\% (teórica 1.004\,\%), FN = 0 \\
+Bloom ($p$=1\,\%) vs \texttt{set} & $10^7$ & 2.23 s / 1.77 s & 3.08 s / 3.24 s & 11.4 MB / 594.4 MB & FPR 1.008\,\% (teórica 1.004\,\%), FN = 0 \\
+CMS ($\varepsilon$=0.001) vs \texttt{Counter} & $10^5$ & 4.34 ms / 6.60 ms & -- & 107 KB / 635 KB & err. medio 8, máx 35 ($\varepsilon N$=100); 100\,\% en cota; subestim. 0 \\
+CMS ($\varepsilon$=0.001) vs \texttt{Counter} & $10^6$ & 57.39 ms / 122.94 ms & -- & 107 KB / 8.3 MB & err. medio 138, máx 380 ($\varepsilon N$=1000); 100\,\% en cota; subestim. 0 \\
+CMS ($\varepsilon$=0.001) vs \texttt{Counter} & $10^7$ & 654.48 ms / 2.05 s & -- & 107 KB / 72.3 MB & err. medio 1505, máx 40991 ($\varepsilon N$=9997); 100\,\% en cota; subestim. 0 \\
+\bottomrule\end{tabular}

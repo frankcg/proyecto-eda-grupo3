@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.idx
+.pytest_cache/
+experiments/logs/
+docs/informe/*.aux
+docs/informe/*.log
+docs/informe/*.out
+.venv/

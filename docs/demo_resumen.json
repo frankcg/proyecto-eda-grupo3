@@ -1,0 +1,341 @@
+{
+ "summary": {
+  "eventos_generados": 306000,
+  "eventos_procesados": 299696,
+  "segundos": 51.61,
+  "throughput_ev_s": 5807,
+  "ordenes": {
+   "aprobado": 10448,
+   "bloqueado": 43,
+   "pendiente": 7
+  },
+  "alertas_fraude": 6,
+  "ventas_soles": 18456990.45,
+  "espera_promedio_ticks": {
+   "alerta": 0.0,
+   "pago": 0.0,
+   "compra_express/premium": 0.0,
+   "compra_estandar": 0.0,
+   "compra_programada": 0.0,
+   "devolucion": 0.0,
+   "carrito": 0.0,
+   "resena": 0.0,
+   "vista/busqueda": 0.507
+  },
+  "max_backlog_heap": 10792,
+  "lru_hit_rate_productos": 0.5234,
+  "lru_hit_rate_kdtree": 0.6899,
+  "bptree_io": {
+   "ordenes": {
+    "disk_reads": 0,
+    "disk_writes": 0,
+    "pages": 104,
+    "pool_hit_rate": 1.0,
+    "height": 2
+   },
+   "precios": {
+    "disk_reads": 0,
+    "disk_writes": 0,
+    "pages": 114,
+    "pool_hit_rate": 1.0,
+    "height": 2
+   }
+  },
+  "grafo": {
+   "reconstrucciones": 4.0,
+   "ordenes_en_ventana": 2432,
+   "aristas": 5047,
+   "modularidad": 0.8164,
+   "comunidades": 190
+  },
+  "generador": {
+   "n_orders": 10500,
+   "n_lines": 22868,
+   "n_bursts": 6,
+   "n_dup": 6000,
+   "n_dirty": 1514,
+   "n_users": 5000,
+   "blacklisted_orders": 43
+  }
+ },
+ "stages": [
+  {
+   "etapa": "E0 Ingesta (FIFO lista enlazada)",
+   "segundos": 2.8074,
+   "entradas": 306000,
+   "salidas": 306000,
+   "us_por_item": 9.17
+  },
+  {
+   "etapa": "E1 Preprocesamiento (Merge Sort + búsqueda binaria)",
+   "segundos": 5.4769,
+   "entradas": 306000,
+   "salidas": 299696,
+   "us_por_item": 17.9,
+   "normalizado_tipo": 304.0,
+   "precio_faltante": 327.0,
+   "normalizado_precio": 279.0,
+   "normalizado_categoria": 271.0,
+   "rechazado_precio_negativo": 323.0,
+   "duplicado_intra_lote": 5975.0,
+   "duplicado_entre_lotes": 6.0
+  },
+  {
+   "etapa": "E2 Cola de prioridades (min-heap)",
+   "segundos": 3.4961,
+   "entradas": 299696,
+   "salidas": 299702,
+   "us_por_item": 11.67
+  },
+  {
+   "etapa": "E3 Hash table + LRU + matriz dispersa",
+   "segundos": 2.9296,
+   "entradas": 299696,
+   "salidas": 299696,
+   "us_por_item": 9.78,
+   "precio_completado": 312.0
+  },
+  {
+   "etapa": "E4 B+Tree (índice en disco)",
+   "segundos": 0.0963,
+   "entradas": 10498,
+   "salidas": 10498,
+   "us_por_item": 9.17
+  },
+  {
+   "etapa": "E5 KD-Tree (KNN exacto)",
+   "segundos": 21.888,
+   "entradas": 246430,
+   "salidas": 246430,
+   "us_por_item": 88.82
+  },
+  {
+   "etapa": "E6 Bloom Filter + Count-Min Sketch",
+   "segundos": 2.2691,
+   "entradas": 10881,
+   "salidas": 10881,
+   "us_por_item": 208.53,
+   "pagos_aprobado": 10495.0,
+   "bloom_positivos": 383.0,
+   "bloom_verificados": 383.0,
+   "pagos_bloqueado": 386.0,
+   "alertas_velocidad": 6.0,
+   "alertas_atendidas": 6.0,
+   "bloom_falsos_positivos": 0.0
+  },
+  {
+   "etapa": "E7 MinHash+LSH y HNSW",
+   "segundos": 177.0043,
+   "entradas": 22756,
+   "salidas": 22756,
+   "us_por_item": 7778.36,
+   "lsh_reconstrucciones": 4.0,
+   "productos_en_lsh": 17043
+  },
+  {
+   "etapa": "E8 Grafo co-compra: PageRank + Louvain",
+   "segundos": 3.214,
+   "entradas": 0,
+   "salidas": 0,
+   "reconstrucciones": 4.0,
+   "ordenes_en_ventana": 2432,
+   "aristas": 5047,
+   "modularidad": 0.8164,
+   "comunidades": 190
+  },
+  {
+   "etapa": "E9 Servicio: Trie, Top-K, panel",
+   "segundos": 2.286,
+   "entradas": 7,
+   "salidas": 0,
+   "us_por_item": 326571.21
+  }
+ ],
+ "watch": {
+  "compra_express": 150084,
+  "vista": 150045,
+  "pago_fraudulento": 56098,
+  "registro_sucio": 150639,
+  "duplicado": 152465
+ },
+ "traces": {
+  "56098": [
+   [
+    "E0",
+    "encolado en FIFO (posición 44)"
+   ],
+   [
+    "E0",
+    "desencolado en micro-lote de 6688"
+   ],
+   [
+    "E1",
+    "validado/normalizado, único (búsqueda binaria en 55985 ids recientes), reordenado por tiempo"
+   ],
+   [
+    "E2",
+    "insertado en heap con prioridad 1 (pago); heap=7538"
+   ],
+   [
+    "E2",
+    "extraído del heap tras esperar 0 ticks"
+   ],
+   [
+    "E3",
+    "evento de pago sin producto: se consulta/actualiza la tabla hash de órdenes y pagos"
+   ],
+   [
+    "E6",
+    "Bloom/CMS: estimación ventana=18, decisión=BLOQUEADO velocidad: ~18 intentos en 5 min (umbral 15); además token de pago en lista negra (positivo del Bloom verificado)"
+   ],
+   [
+    "E9",
+    "reflejado en el panel de alertas/actividad"
+   ]
+  ],
+  "150045": [
+   [
+    "E0",
+    "encolado en FIFO (posición 4881)"
+   ],
+   [
+    "E0",
+    "desencolado en micro-lote de 5652"
+   ],
+   [
+    "E1",
+    "validado/normalizado, único (búsqueda binaria en 145123 ids recientes), reordenado por tiempo"
+   ],
+   [
+    "E2",
+    "insertado en heap con prioridad 8 (vista/busqueda); heap=5655"
+   ],
+   [
+    "E2",
+    "extraído del heap tras esperar 1 ticks"
+   ],
+   [
+    "E3",
+    "lookup O(1) en hash table vía LRU (hit-rate 52%), perfil de usuario e interacción en matriz dispersa actualizados; producto 'Monitor Lg S811' (S/ 489.86)"
+   ],
+   [
+    "E5",
+    "KD-Tree: 5 productos con atributos más cercanos [9734, 19848, 5565, 7920, 3940]"
+   ],
+   [
+    "E9",
+    "Top-5 recomendado al usuario: Cargador Apple O869 (0.39), Smartwatch Motorola U986 (0.39), Audífonos Apple G242 (0.39), Funda Huawei G324 (0.37), Smartphone Motorola O419 (0.26)"
+   ]
+  ],
+  "150084": [
+   [
+    "E0",
+    "encolado en FIFO (posición 4920)"
+   ],
+   [
+    "E0",
+    "desencolado en micro-lote de 5652"
+   ],
+   [
+    "E1",
+    "validado/normalizado, único (búsqueda binaria en 145123 ids recientes), reordenado por tiempo"
+   ],
+   [
+    "E2",
+    "insertado en heap con prioridad 2 (compra_express/premium); heap=5655"
+   ],
+   [
+    "E2",
+    "extraído del heap tras esperar 0 ticks"
+   ],
+   [
+    "E3",
+    "lookup O(1) en hash table vía LRU (hit-rate 52%), perfil de usuario e interacción en matriz dispersa actualizados; producto 'Juguete Lego O46' (S/ 109.25)"
+   ],
+   [
+    "E4",
+    "orden 5228 indexada en B+Tree (altura 2, 51 páginas de 4 KB)"
+   ],
+   [
+    "E5",
+    "KD-Tree: 5 productos con atributos más cercanos [10733, 3722, 17878, 8360, 5690]"
+   ],
+   [
+    "E6",
+    "orden en estado 'APROBADO' (su intento de pago pasó por Bloom + verificación exacta y CMS); compra contada en el CMS de tendencias (~1 en la última hora)"
+   ],
+   [
+    "E7",
+    "compra aprobada alimenta los conjuntos de compradores; similares por comportamiento (LSH) [2998, 2076, 3404] y por contenido (HNSW) [4973, 1678, 8990]"
+   ],
+   [
+    "E8",
+    "orden 5228 entra al grafo de co-compra en la siguiente reconstrucción (ventana 7 días vía range scan del B+Tree)"
+   ],
+   [
+    "E9",
+    "Top-5 recomendado al usuario: Mouse Hp X319 (0.22), Mouse Apple U883 (0.15), Juguete Fisherprice H268 (0.14), Juguete Fisherprice J432 (0.14), Juguete Fisherprice S76 (0.14)"
+   ]
+  ],
+  "150639": [
+   [
+    "E0",
+    "encolado en FIFO (posición 5488)"
+   ],
+   [
+    "E0",
+    "desencolado en micro-lote de 5652"
+   ],
+   [
+    "E1",
+    "rechazado: precio_negativo"
+   ]
+  ],
+  "152465": [
+   [
+    "E0",
+    "encolado en FIFO (posición 1692)"
+   ],
+   [
+    "E0",
+    "encolado en FIFO (posición 1696)"
+   ],
+   [
+    "E0",
+    "desencolado en micro-lote de 5915"
+   ],
+   [
+    "E0",
+    "desencolado en micro-lote de 5915"
+   ],
+   [
+    "E1",
+    "copia duplicada eliminada: Merge Sort por event_id + descarte de adyacentes iguales (O(b log b))"
+   ],
+   [
+    "E1",
+    "validado/normalizado, único (búsqueda binaria en 150651 ids recientes), reordenado por tiempo"
+   ],
+   [
+    "E2",
+    "insertado en heap con prioridad 8 (vista/busqueda); heap=6461"
+   ],
+   [
+    "E2",
+    "extraído del heap tras esperar 0 ticks"
+   ],
+   [
+    "E3",
+    "lookup O(1) en hash table vía LRU (hit-rate 52%), perfil de usuario e interacción en matriz dispersa actualizados; producto 'Zapatillas Levis S801' (S/ 497.87)"
+   ],
+   [
+    "E5",
+    "KD-Tree: 5 productos con atributos más cercanos [12709, 4032, 1651, 18935, 15766]"
+   ],
+   [
+    "E9",
+    "Top-5 recomendado al usuario: Laptop Lg D108 (0.23), Zapatillas Puma Z212 (0.14), Laptop Lg I558 (0.14), Laptop Apple N500 (0.14), Laptop Apple I702 (0.13)"
+   ]
+  ]
+ }
+}

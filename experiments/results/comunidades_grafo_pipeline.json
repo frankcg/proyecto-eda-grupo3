@@ -1,0 +1,51 @@
+{
+ "nodos_activos": 5681,
+ "aristas": 15390,
+ "ordenes": 8269,
+ "Louvain": {
+  "modularidad": 0.755274399892303,
+  "modularidad_std": 0.0017812959145354084,
+  "tiempo_s": 0.45155080960003036,
+  "tiempo_std": 0.08371674523203006,
+  "comunidades": 221,
+  "mayor": 829,
+  "mediana": 2.0,
+  "singletons": 0,
+  "estabilidad_nmi": 0.8655360941893049,
+  "tamanos_top10": [
+   829,
+   671,
+   574,
+   497,
+   377,
+   308,
+   290,
+   234,
+   206,
+   192
+  ]
+ },
+ "Label Propagation": {
+  "modularidad": 0.630270471505566,
+  "modularidad_std": 0.011097944555931964,
+  "tiempo_s": 0.19061927809998452,
+  "tiempo_std": 0.06702282741473647,
+  "comunidades": 848,
+  "mayor": 372,
+  "mediana": 3.0,
+  "singletons": 0,
+  "estabilidad_nmi": 0.8601957405104991,
+  "tamanos_top10": [
+   372,
+   369,
+   327,
+   152,
+   150,
+   138,
+   112,
+   92,
+   90,
+   85
+  ]
+ }
+}

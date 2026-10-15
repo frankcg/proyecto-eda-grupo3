@@ -1,0 +1,8 @@
+Diseñamos, implementamos y evaluamos \textbf{EcoStream}, un pipeline de procesamiento de streams de comercio electrónico de diez etapas en el que cada etapa usa la
+estructura de datos más adecuada y su salida alimenta a otra de forma verificable: cola FIFO, Merge Sort y búsqueda binaria, heap de prioridades, tabla hash, LRU y matriz
+dispersa, B+Tree paginado en disco, KD-Tree, Bloom Filter y Count-Min Sketch para fraude, MinHash+LSH y HNSW para similitud, grafo de co-compra con PageRank y Louvain, y
+un servicio con Trie, Top-$K$ y panel. Todas las estructuras son implementaciones propias en Python, validadas con 14 pruebas contra referencias. Con datasets de
+$10^3$ a $10^7$ elementos mostramos que las complejidades teóricas se cumplen en log-log; que el Bloom Filter alcanza su FPR teórica (1.008\,\% frente a 1.004\,\%) con
+52$\times$ menos memoria que un \texttt{set}; que MinHash+LSH responde $\sim$9\,000$\times$ más rápido que la fuerza bruta con $10^7$ conjuntos sin perder vecinos con
+$J\ge0.5$; que HNSW es 54$\times$ más rápido que el KNN exacto con recall@10 = 0.989 en $10^6$ vectores; y que Louvain es más estable que Label Propagation y logra mayor
+modularidad en el grafo real de co-compra (0.755 frente a 0.630). El pipeline procesa 10M eventos de punta a punta.

@@ -1,0 +1,10 @@
+numpy>=1.26
+pandas>=2.0
+matplotlib>=3.8
+psutil>=5.9
+networkx>=3.2      # solo como referencia en tests
+scipy>=1.11        # requerido por networkx.pagerank en tests
+pytest>=7
+nbformat
+nbconvert
+ipykernel

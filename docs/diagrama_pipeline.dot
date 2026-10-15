@@ -1,0 +1,44 @@
+digraph pipeline {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=11, nodesep=0.5, ranksep=0.9, newrank=true, bgcolor="white", pad=0.2];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, color="#94a3b8", fillcolor="#f8fafc", penwidth=1.2];
+  edge  [fontname="Helvetica", fontsize=8.5, color="#475569", arrowsize=0.7];
+
+  src [label="Stream de eventos\n(REES46 + sintético)\nview · search · cart · purchase\npayment_attempt · return · review", shape=note, fillcolor="#ffffff"];
+
+  e0 [label="E0 Ingesta\nCola FIFO\n(lista enlazada)"];
+  e1 [label="E1 Preprocesamiento\nMerge Sort + búsqueda binaria\nvalidar · normalizar · dedup"];
+  e2 [label="E2 Prioridades\nMin-heap binario\nalerta > pago > express > ... > vista"];
+  e3 [label="E3 Almacenamiento\nHash table · LRU\nmatriz dispersa usuario×producto"];
+  e4 [label="E4 Indexación\nB+Tree en disco\n(páginas 4 KB, buffer pool LRU)"];
+  e5 [label="E5 Multidimensional\nKD-Tree 4D\n(KNN exacto, base: fuerza bruta)"];
+  e6 [label="E6 [FIJA] Filtrado\nBloom Filter (lista negra)\nCount-Min Sketch (5 min, umbral 15)", fillcolor="#eff6ff", color="#2563eb", penwidth=1.6];
+  e7 [label="E7 [FIJA] Similitud\nMinHash + LSH (Jaccard)\nHNSW (vectores 32D)", fillcolor="#eff6ff", color="#2563eb", penwidth=1.6];
+  e8 [label="E8 [FIJA] Grafo co-compra\nPageRank / PPR\nLouvain (vs Label Propagation)", fillcolor="#eff6ff", color="#2563eb", penwidth=1.6];
+  e9 [label="E9 Servicio\nTrie autocompletado · Top-K heap\nrecomendaciones · panel", fillcolor="#ecfdf5", color="#059669", penwidth=1.6];
+
+  src -> e0 [label="eventos"];
+  e0 -> e1 [label="micro-lote"];
+  e1 -> e2 [label="lote limpio\nordenado por tiempo"];
+  e2 -> e3 [label="evento por prioridad"];
+  e4 -> e3 [label="evento\nenriquecido", dir=back];
+  e5 -> e4 [label="orden\nindexada", dir=back];
+  e6 -> e5 [label="candidatos\npor atributos", dir=back];
+  e6 -> e7 [label="solo aprobados"];
+  e7 -> e8 [label="similares"];
+  e8 -> e9 [label="PR · comunidades · PPR"];
+
+  e6 -> e2 [label="alerta re-inyectada\n(prioridad 0)", style=dashed, color="#dc2626", fontcolor="#dc2626", constraint=false];
+  e3 -> e6 [label="lista negra exacta\n(verificación)", style=dotted, constraint=false];
+  e3 -> e7 [label="conjuntos de\ncompradores", style=dotted, constraint=false];
+  e4 -> e8 [label="range scan\nventana 7 días", style=dotted, constraint=false];
+  e4 -> e9 [label="rango de precios", style=dotted, constraint=false];
+  e5 -> e9 [label="vecinos KD", style=dotted, constraint=false];
+  e6 -> e9 [label="tendencias CMS · alertas", style=dotted, constraint=false];
+  e7 -> e9 [label="LSH · HNSW", style=dotted, constraint=false];
+
+  {rank=same; src; e0; e1; e2;}
+  {rank=same; e6; e5; e4; e3;}
+  {rank=same; e7; e8; e9; out;}
+  out [label="Salidas observables\nrecomendación Top-K · alerta de fraude\nranking · autocompletado · panel HTML", shape=note, fillcolor="#ffffff"];
+  e9 -> out;
+}

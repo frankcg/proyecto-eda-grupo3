@@ -1,0 +1,108 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,provide=*]{babel}
+\usepackage{mathptmx}
+\usepackage[scaled=0.92]{helvet}
+\usepackage[margin=1.9cm,top=1.8cm,bottom=1.9cm]{geometry}
+\usepackage{graphicx}\usepackage{booktabs,graphicx,amsmath,amssymb,multirow,tabularx,float,enumitem,microtype}
+\usepackage[table]{xcolor}
+\usepackage[font=small,labelfont=bf,skip=3pt]{caption}
+\usepackage{titlesec,fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\definecolor{acc}{HTML}{2A78D6}
+\titleformat{\section}{\large\bfseries\sffamily\color{acc}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries\sffamily}{\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{8pt}{3pt}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\setlist{nosep,leftmargin=1.2em}
+\setlength{\parskip}{2pt}
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small\sffamily EDA 2026-2 · Proyecto final · Grupo 3}
+\rhead{\small\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\newcommand{\Oh}[1]{\ensuremath{O(#1)}}
+\renewcommand{\arraystretch}{1.12}
+
+\begin{document}
+\begin{center}
+{\sffamily\small UTEC — Maestría en Ciencia de Datos e Inteligencia Artificial · Estructuras de Datos y Algoritmos 2026-2 · Prof. Heider Sánchez}\\[4pt]
+{\LARGE\bfseries\sffamily EcoStream: estructuras de datos avanzadas orquestadas\\[2pt] en un pipeline de data streams para comercio electrónico}\\[5pt]
+{\sffamily Grupo 3 — \input{integrantes.tex}}\\[2pt]
+{\small\sffamily Repositorio: \texttt{proyecto-eda-grupo3} · Escenario B (comercio electrónico)}
+\end{center}
+
+\noindent\colorbox{acc!8}{\parbox{\dimexpr\linewidth-2\fboxsep}{\small
+\textbf{Resumen.} \input{resumen.tex}}}
+
+\section{Contexto y motivación}
+Una tienda en línea recibe un flujo continuo de vistas, búsquedas, carritos, pagos, compras, devoluciones y reseñas. Sobre ese flujo
+el negocio necesita, con baja latencia: atender primero los pagos y las órdenes urgentes; consultar productos por clave y por rango;
+detectar medios de pago o dispositivos señalados y ráfagas de intentos (\emph{card testing}) \emph{antes} de aprobar una orden;
+recomendar productos relacionados y complementarios; e identificar comunidades de co-compra y productos influyentes para
+\emph{cross-selling}. Ninguna estructura resuelve todo: cada requisito tiene una estructura óptima distinta y el valor del sistema
+está en \textbf{orquestarlas} de modo que la salida de cada etapa sea la entrada real de otra. El escenario elegido es el
+\textbf{B (comercio electrónico)}; el grafo de dominio tiene a los productos como nodos y una arista ponderada entre productos
+comprados en la misma orden.
+
+\textbf{Datos.} Como base estructural se adoptó el esquema del dataset público \emph{eCommerce behavior data from multi category store}
+(REES46, Kaggle: \texttt{event\_time, event\_type, product\_id, category\_code, brand, price, user\_id, user\_session}); el repositorio incluye
+un cargador (\texttt{rees46\_loader.py}) que alimenta el mismo pipeline con el CSV real. Siguiendo la recomendación del enunciado, el
+componente de \emph{stream} se genera sintéticamente y de forma vectorizada (10M eventos en $\sim$20\,s) con propiedades controladas por semilla:
+catálogo de 20\,000 productos en 40 categorías con popularidad Zipf, afinidad usuario$\to$categoría (comunidades reales) y categorías
+complementarias plantadas; órdenes de 1–6 ítems con envío express/estándar/programado; 2\,\% de re-entregas duplicadas, 0.5\,\% de registros sucios
+(tipo en mayúsculas, precio con coma decimal, faltante o negativo, categoría en mayúsculas); 500 tokens de pago comprometidos y ráfagas
+de 25–80 intentos de pago en $\le$3 minutos, la mitad con tokens nuevos que solo una estimación de frecuencia puede detectar.
+
+\section{Arquitectura del pipeline}
+\begin{figure}[H]
+\centering\includegraphics[width=\linewidth]{../diagrama_pipeline.pdf}
+\caption{Arquitectura de 10 etapas. Flechas sólidas: flujo principal de cada evento; punteadas: salidas de una etapa consumidas por otra
+(lista negra exacta, conjuntos de compradores, \emph{range scan} temporal, vecinos, tendencias); discontinua roja: realimentación de alertas
+de fraude a la cola de prioridades con prioridad 0.}
+\label{fig:arq}
+\end{figure}
+\vspace{-4pt}
+El procesamiento es por \textbf{micro-lotes} (como Spark Structured Streaming): E0–E6 actúan evento a evento sobre cada lote y E7–E8, cuyo
+costo es global, se recalculan cada 20 lotes con los datos que ya pasaron el filtro. La integración es verificable: el script
+\texttt{scripts/demo.py} marca eventos concretos y registra lo que cada etapa hizo con ellos (Sección~\ref{sec:demo}).
+Las etapas 0--5 se resumen en la Tabla~\ref{tab:base}; las etapas \textsc{fija} 6--8 se documentan en profundidad en la Sección~\ref{sec:inv}.
+
+\begin{table}[H]
+\centering\small
+\caption{Etapas 0–5 y 9: función, estructura (implementación propia), complejidad y justificación frente a alternativas.}
+\label{tab:base}
+\begin{tabularx}{\linewidth}{@{}p{2.15cm}p{2.9cm}p{2.7cm}X@{}}
+\toprule
+\textbf{Etapa} & \textbf{Estructura} & \textbf{Complejidad} & \textbf{Función en el pipeline y justificación} \\
+\midrule
+E0 Ingesta & Cola FIFO con lista enlazada y capacidad máxima & enqueue/dequeue \Oh{1}; lote \Oh{b} & Buffer del stream con \emph{backpressure}. \texttt{list.pop(0)} es \Oh{n}; un arreglo circular exige capacidad fija. Entrega micro-lotes a E1. \\
+E1 Preproceso & Merge Sort estable (runs de 16 con inserción) + búsqueda binaria & \Oh{b\log b} por lote; \Oh{\log W} por id & Valida y normaliza; categoría validada por búsqueda binaria; deduplica intra-lote (ordenar por \texttt{event\_id} + adyacentes) y entre lotes (búsqueda binaria en ventana ordenada de $W$=300K ids). Estable y sin peor caso \Oh{n^2} (Quicksort). Reordena por tiempo. \\
+E2 Prioridades & Min-heap binario en arreglo, clave (prioridad, tiempo) & push/pop \Oh{\log n} & 9 clases: alerta $>$ pago $>$ express/premium $>$ estándar $>$ programada $>$ devolución $>$ carrito $>$ reseña $>$ vista. Lista ordenada: inserción \Oh{n}. El desempate por tiempo evita inanición dentro de cada clase. \\
+E3 Almacén & Tabla hash (sondeo lineal, carga 0.7), LRU (hash + lista doble), matriz dispersa DOK$\to$CSR & \Oh{1} esperado; LRU \Oh{1}; \Oh{nnz} memoria & Producto, usuario, orden, pago y lista negra exacta. LRU para productos y resultados calientes (Zipf). Matriz usuario$\times$producto: densa costaría 8\,GB a $10^5\!\times\!10^4$. Enriquece el evento y alimenta E6, E7 y E9. \\
+E4 Índice disco & B+Tree con páginas de 4\,KB en archivo + \emph{buffer pool} LRU (write-back) & \Oh{\log_B n} páginas; rango \Oh{\log_B n + k/B} & Índice temporal de órdenes (E8 lee la ventana de 7 días con \emph{range scan}) y de precios (E9). Fan-out $B\approx200$: altura 4 con $10^7$ claves vs.\ $\sim$24 de un AVL. \\
+E5 Multidim. & KD-Tree 4D (mediana, dimensión de mayor dispersión, hojas de 32) + KNN fuerza bruta como base & construcción \Oh{n\log n}; consulta $\sim$\Oh{\log n} en $d$ bajo & Productos con atributos parecidos (precio, rating, popularidad, descuento) para cada vista; los productos son puntos (no rectángulos), por eso KD-Tree y no R-Tree. Resultados cacheados en LRU. \\
+E9 Servicio & Trie con top-$K$ cacheado por nodo, Top-$K$ con min-heap de tamaño $K$ & autocompletar \Oh{|p|+K}; Top-$K$ \Oh{n\log K} & Autocompletado ponderado por ventas$\times$PageRank; recomendación por fusión de PPR (E8), LSH y HNSW (E7) y KD (E5); tendencias del CMS; panel HTML. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Investigación avanzada: etapas 6–8}\label{sec:inv}
+\input{investigacion.tex}
+
+\section{Diseño e integración}\label{sec:diseno}
+\input{diseno.tex}
+
+\section{Metodología experimental}\label{sec:metodo}
+\input{metodologia.tex}
+
+\section{Resultados}\label{sec:res}
+\input{resultados.tex}
+
+\section{Conclusiones}
+\input{conclusiones.tex}
+
+\small
+\section*{Referencias}
+{\sloppy\input{referencias.tex}}
+\end{document}

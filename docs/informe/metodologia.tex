@@ -1,0 +1,15 @@
+\textbf{Plataforma.} Intel Xeon @ 2.30\,GHz, 2 vCPU, 7.8\,GB de RAM, Linux 6.18, Python 3.13.16, NumPy 2.5.3. \textbf{Semilla} global 42 (cada
+tamaño usa $42+n$ para que los datos sean distintos pero reproducibles). Los experimentos se ejecutaron en dos colas paralelas, una por núcleo, y los de
+$10^7$ de forma secuencial (\texttt{experiments/run\_all.sh}).
+
+\textbf{Tamaños.} Para cada estructura base y cada etapa \textsc{fija} se generaron datasets de $10^3$, $10^4$, $10^5$, $10^6$ y $10^7$ elementos (operaciones,
+claves, conjuntos, vectores, aristas o eventos según la estructura). \textbf{Repeticiones:} una corrida de calentamiento estima $t$ y luego
+$\text{reps}=\min(100,\max(r_{\min},\lfloor 60\,\mathrm{s}/t\rfloor))$, con $r_{\min}=3$ hasta $10^6$ y entre 1 y 3 en $10^7$; se reportan media y desviación
+estándar. Con ello $10^3$–$10^4$ (y casi todo $10^5$) alcanzan 100 repeticiones; en $10^6$–$10^7$ se usan menos porque una sola corrida de una estructura en
+Python puro dura de segundos a minutos y el presupuesto total de cómputo es de 2 vCPU. Cada fila de \texttt{experiments/results/*.csv} reporta su número real de
+repeticiones. \textbf{Memoria:} corrida aparte con \texttt{tracemalloc} (memoria retenida por la estructura y pico durante la operación; NumPy registra sus
+\emph{buffers}); en $10^7$, donde \texttt{tracemalloc} multiplica el tiempo 3–5$\times$, se usa la herramienta equivalente: RSS de \texttt{psutil} en un proceso hijo
+(actual) y \texttt{ru\_maxrss} (pico). \textbf{Escalabilidad:} se grafica en log-log y se ajusta $t=a\,n^{b}$ por mínimos cuadrados; la pendiente $b$ se contrasta
+con la complejidad esperada (1 para lineal, $\approx$1.05–1.1 para $n\log n$ en este rango, 2 para cuadrática, $\approx$0 para logarítmica).
+\textbf{Calidad:} FPR empírica sobre $n$ claves ausentes; error del CMS contra un \texttt{Counter} exacto; recall@10 de LSH y HNSW contra fuerza bruta;
+modularidad, número/tamaño de comunidades, estabilidad (NMI media entre pares de semillas) y NMI contra las comunidades plantadas.

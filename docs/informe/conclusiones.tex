@@ -1,0 +1,19 @@
+\begin{enumerate}[leftmargin=1.3em]
+\item \textbf{La integración es el resultado.} Un evento atraviesa las 10 etapas y cada salida es la entrada real de otra: la lista negra exacta de E3 verifica los
+positivos del Bloom de E6; las alertas del CMS vuelven a E2 con prioridad 0; solo las órdenes aprobadas por E6 entran, vía \emph{range scan} del B+Tree de E4, al grafo
+de E8; el PPR de E8, el LSH/HNSW de E7 y el KD-Tree de E5 se fusionan en el Top-$K$ de E9. El pipeline procesa 10M eventos de punta a punta en Python puro.
+\item \textbf{Las complejidades se cumplen empíricamente} (pendientes log-log de 1.0–1.2 para estructuras lineales y $n\log n$, 1.36 en el B+Tree por la E/S de disco, $\approx$0.1 para KD-Tree, Trie, LSH y HNSW,
+$\approx$2 para las alternativas ingenuas). El B+Tree muestra el efecto que justifica su existencia: con $10^7$ claves, altura 4 y 1.7 lecturas de disco por búsqueda.
+\item \textbf{Lo probabilístico cambia exactitud por memoria, con garantías medibles.} El Bloom cumple su FPR teórica con 52$\times$ menos memoria que un \texttt{set}
+(sin ganar velocidad frente a un \texttt{set} nativo); el CMS usa memoria constante, nunca subestima y respeta $\varepsilon N$. Por eso ambos se usan como filtros
+frente a una verificación exacta y no como decisión final.
+\item \textbf{Lo aproximado cambia recall por velocidad.} MinHash+LSH responde $\sim$9\,000$\times$ más rápido que la fuerza bruta en $10^7$ sin perder vecinos con
+$J\ge0.5$, pero sus parámetros deben ajustarse al dominio (la configuración típica 16$\times$4 fallaba con las similitudes bajas de co-compra). HNSW es 54$\times$ más rápido
+que el KNN exacto en $10^6$ con recall 0.989; el KD-Tree, exacto y excelente en 4D, colapsa en 32D.
+\item \textbf{Louvain frente a Label Propagation:} LPA es $\sim$2$\times$ más rápido, pero Louvain es estable entre ejecuciones, no fragmenta en miles de comunidades
+diminutas y, en el grafo real de co-compra, logra mayor modularidad (0.755 frente a 0.630). PageRank aporta poco sobre el grado en grafos no dirigidos; su versión
+personalizada es la que agrega valor.
+\item \textbf{Límites y trabajo futuro:} la construcción de HNSW y el Trie de $10^7$ nombres no caben en el presupuesto de 2 vCPU/7.8\,GB en Python (se reportan hasta $10^6$);
+el siguiente paso es un núcleo en C/Numba o \texttt{hnswlib}, Leiden en lugar de Louvain, \emph{Cuckoo filters} para permitir borrados en la lista negra, y validar el
+pipeline con el CSV completo de REES46.
+\end{enumerate}

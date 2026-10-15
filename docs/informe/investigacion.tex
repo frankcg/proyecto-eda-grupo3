@@ -1,0 +1,79 @@
+Para cada familia se resume fundamento, funcionamiento interno, complejidad, casos de uso, límites y \emph{trade-offs}, el paper original,
+implementaciones de referencia (contra las que se validó la nuestra en \texttt{tests/}) y la evidencia empírica frente a la alternativa exacta o
+más simple (Sección~\ref{sec:res}). Todas las estructuras están implementadas por el grupo en \texttt{src/ecostream/}.
+
+\subsection{Filtrado probabilístico: Bloom Filter + Count-Min Sketch (E6)}
+\textbf{Bloom Filter} (Bloom, 1970). \emph{Fundamento:} representar un conjunto $S$ con un arreglo de $m$ bits y $k$ funciones hash; aceptar
+falsos positivos a cambio de memoria sublineal en el tamaño de las claves. \emph{Funcionamiento:} \texttt{add}$(x)$ enciende los bits
+$g_i(x)$, $i=1..k$; \texttt{contains}$(x)$ responde \emph{posiblemente presente} si todos están encendidos y \emph{definitivamente ausente}
+si alguno está apagado (sin falsos negativos). Usamos \emph{double hashing} $g_i(x)=h_1(x)+i\,h_2(x) \bmod m$ (Kirsch y Mitzenmacher, 2006),
+que conserva la FPR asintótica con solo dos hashes de 64 bits (splitmix64 sobre BLAKE2b). \emph{Complejidad:} \Oh{k} por operación, independiente de
+$n$; memoria $m=-n\ln p/(\ln 2)^2$ bits ($\approx$9.6 bits/elemento para $p=1\,\%$) con $k=(m/n)\ln 2$; FPR teórica $(1-e^{-kn/m})^k$.
+\emph{Casos de uso:} listas negras, caché de “un solo acceso”, evitar lecturas a disco en LSM-trees (LevelDB, Cassandra), \emph{joins} distribuidos.
+\emph{Límites:} no admite borrado (\emph{Counting Bloom} o \emph{Cuckoo filter}, Fan et al., 2014), exige estimar $n$ por adelantado (si se excede,
+la FPR crece rápidamente; \emph{Scalable Bloom Filters}) y un positivo nunca es prueba. \emph{Referencias de implementación:} Guava \texttt{BloomFilter},
+RedisBloom, \texttt{pybloom-live}.
+\emph{Decisión en el pipeline:} el filtro contiene tokens de pago y dispositivos señalados ($n=50\,000$, $p=0.1\,\%$, 88\,KB). Un positivo
+\textbf{no bloquea}: se verifica en la tabla hash exacta de E3 (decisión crítica); solo si se confirma se bloquea, y si no, se contabiliza como
+falso positivo y la orden continúa. Así el Bloom ahorra la consulta exacta en el $\sim$99.9\,\% de pagos legítimos sin introducir bloqueos erróneos.
+
+\textbf{Count-Min Sketch} (Cormode y Muthukrishnan, 2005). \emph{Fundamento:} resumen lineal de un \emph{stream} que estima frecuencias con error
+aditivo acotado en memoria independiente del número de claves. \emph{Funcionamiento:} matriz $d\times w$ de contadores y $d$ hashes por pares
+independientes; \texttt{update}$(x,c)$ suma $c$ en $C[i,h_i(x)]$ para cada fila y $\hat f(x)=\min_i C[i,h_i(x)]$. \emph{Garantía:} con
+$w=\lceil e/\varepsilon\rceil$ y $d=\lceil\ln(1/\delta)\rceil$, $f(x)\le\hat f(x)\le f(x)+\varepsilon N$ con probabilidad $\ge1-\delta$ (nunca subestima).
+\emph{Complejidad:} \Oh{d} por operación; memoria \Oh{wd}. \emph{Casos de uso:} \emph{heavy hitters}, tendencias, detección de DDoS y de
+velocidad de transacciones, conteos aproximados en bases columnares. \emph{Límites:} el error es relativo a $N$ (malo para claves raras),
+sesgo positivo (Count Sketch de Charikar et al.\ es insesgado; \emph{conservative update} reduce la sobreestimación). \emph{Referencias:}
+RedisBloom (CMS), Apache DataSketches, \texttt{stream-lib}.
+\emph{Decisión en el pipeline (clave, ventana y umbral exigidos):} \textbf{clave} = \texttt{payment\_token} y \texttt{device\_id} de cada intento de
+pago; \textbf{ventana} deslizante de 5 minutos implementada como anillo de 5 sub-sketches de 60\,s ($\varepsilon=5\cdot10^{-4}$, $\delta=10^{-3}$);
+\textbf{umbral} = más de 15 intentos en la ventana (un cliente legítimo hace 1–3). Al superarlo se genera una alerta que (i) se re-inyecta en el heap
+con prioridad 0, (ii) agrega token y dispositivo al Bloom y a la lista negra exacta y (iii) se muestra en el panel. Un segundo CMS (ventana de 1\,h)
+cuenta compras por producto y alimenta las tendencias de E9.
+
+\subsection{Similitud de conjuntos: MinHash + LSH (E7)}
+\emph{Fundamento} (Broder, 1997; Indyk y Motwani, 1998): para una permutación aleatoria $\pi$ del universo, $\Pr[\min\pi(A)=\min\pi(B)]=J(A,B)$.
+Con $k$ permutaciones (aproximadas por hashes universales $h_i(x)=(a_ix+b_i)\bmod(2^{31}-1)$) la fracción de coincidencias estima $J$ con error estándar
+$\sqrt{J(1-J)/k}$. \emph{LSH por bandas:} la firma se divide en $b$ bandas de $r$ filas y dos conjuntos son candidatos si coinciden en una banda completa:
+$\Pr[\text{candidato}]=1-(1-J^r)^b$, una curva S con umbral $\approx(1/b)^{1/r}$. \emph{Complejidad:} firmas \Oh{k|A|} por conjunto; índice \Oh{nb};
+consulta \Oh{b\log n+|C|\,k} frente a \Oh{n\,\bar{|A|}} de la fuerza bruta. Nuestra implementación guarda por banda un arreglo ordenado de claves de 64 bits
+y responde con búsqueda binaria (\texttt{searchsorted}), y construye el índice por bloques sin materializar la matriz de firmas (10M conjuntos en $\sim$2.6\,GB).
+\emph{Casos de uso:} casi-duplicados web, deduplicación de catálogos, \emph{item-item} colaborativo, plagio. \emph{Límites:} solo Jaccard; elegir $(b,r)$
+fija el compromiso recall/candidatos; conjuntos muy pequeños tienen estimaciones ruidosas. \emph{Referencias:} \texttt{datasketch} (Python), Spark MLlib
+\texttt{MinHashLSH}; Leskovec et al.\ (2020, cap.~3). \emph{Selección frente a SimHash} (Charikar, 2002): la señal de comportamiento es un conjunto binario
+(usuarios que interactuaron con el producto), cuya similitud natural es Jaccard; SimHash aproxima coseno sobre vectores ponderados. \emph{Parámetros:}
+$k=64$, $b=32$, $r=2$ (umbral 0.18), elegidos con el experimento de la Fig.~\ref{fig:lsh}: en este dominio la Jaccard producto–producto rara vez supera 0.3, y
+la configuración típica $16\times4$ (umbral 0.5) recuperaba menos del 10\,\% de los vecinos reales del pipeline.
+
+\subsection{ANN vectorial: HNSW (E7)}
+\emph{Fundamento} (Malkov y Yashunin, 2020): grafos de mundo pequeño navegables más una jerarquía tipo \emph{skip list}. \emph{Funcionamiento:} cada
+vector recibe un nivel $l=\lfloor-\ln U\cdot m_L\rfloor$, $m_L=1/\ln M$; las capas altas son “autopistas” con pocos nodos y la capa 0 contiene a todos.
+La inserción baja voraz hasta $l$ y en cada capa ejecuta \texttt{search\_layer} con $ef_c$ candidatos, elige $M$ vecinos con la \textbf{heurística de
+diversidad} (un candidato se acepta si está más cerca del nuevo nodo que de los ya elegidos; preserva puentes entre clústeres) y poda los vecinos que
+exceden $M_{max}$. La consulta repite el descenso y explora la capa 0 con $ef\ge k$. \emph{Complejidad:} construcción \Oh{n\log n}, consulta
+$\sim$\Oh{\log n} empírica, memoria \Oh{n(d+M)}. \emph{Casos de uso:} búsqueda semántica, recomendación por \emph{embeddings}, RAG.
+\emph{Límites:} aproximado (recall $<1$ si $ef$ es bajo), memoria del grafo, borrado costoso, construcción cara en Python.
+\emph{Referencias:} \texttt{hnswlib}, FAISS \texttt{IndexHNSWFlat}; en ANN-Benchmarks (Aumüller et al., 2020) los métodos basados en HNSW dominan el frente
+recall–QPS. \emph{Selección frente a IVF y M-Tree/VP-Tree:} el catálogo crece con inserciones incrementales (HNSW no requiere reentrenar centroides como IVF,
+Jégou et al., 2011) y el espacio de \emph{embeddings} normalizados es euclidiano (equivalente a coseno), por lo que no se necesita un índice métrico general.
+El KD-Tree de E5 se mantiene para 4 dimensiones: en 32D visita casi todas las hojas (Fig.~\ref{fig:sim}), evidencia directa de la maldición de la dimensionalidad.
+
+\subsection{Ranking de influencia: PageRank y Personalized PageRank (E8)}
+\emph{Fundamento} (Brin y Page, 1998): la importancia de un nodo es la probabilidad estacionaria de un caminante aleatorio que sigue aristas con probabilidad
+$d=0.85$ y se teletransporta con $1-d$. En el grafo de co-compra ponderado, $P_{ij}=w_{ij}/s_i$ y $r_{t+1}=d\,P^\top r_t+(d\,r_{\text{colg}}+1-d)\,v$.
+\emph{Funcionamiento:} iteración de potencias hasta $\|r_{t+1}-r_t\|_1<10^{-9}$; cada iteración es un producto matriz dispersa–vector \Oh{m} (implementado con
+\texttt{np.bincount}); converge geométricamente con razón $d$. \emph{Personalized PageRank} (Haveliwala, 2002) usa $v$ concentrado en las semillas (carrito y
+compras del usuario) y mide afinidad con ellas: es la señal principal del recomendador. \emph{Límites:} en grafos no dirigidos PageRank está muy
+correlacionado con el grado; es costoso recalcular PPR por usuario (se cachea en LRU). \emph{Referencias:} \texttt{networkx.pagerank} (nuestra
+implementación coincide con un error $<10^{-6}$ en \texttt{tests/}), igraph, Spark GraphX. \emph{Alternativa simple:} ranking por grado ponderado.
+
+\subsection{Comunidades: Louvain frente a Label Propagation (E8)}
+\emph{Fundamento:} maximizar la modularidad $Q=\sum_c\left[L_c/m-(S_c/2m)^2\right]$ (Newman, 2006). \textbf{Louvain} (Blondel et al., 2008), el algoritmo
+elegido, alterna (1) movimientos locales: cada nodo pasa a la comunidad vecina con mayor ganancia $\Delta Q\propto k_{i,c}-S_c k_i/2m$ hasta que no hay mejora, y
+(2) agregación de cada comunidad en un super-nodo; se repite por niveles. Complejidad empírica $\sim$\Oh{m\log n}, memoria \Oh{n+m}.
+\textbf{Label Propagation} (Raghavan et al., 2007), la alternativa más simple: cada nodo adopta la etiqueta de mayor peso entre sus vecinos, en orden aleatorio,
+hasta que no hay cambios; \Oh{m} por iteración, sin función objetivo y sensible al orden. Girvan–Newman se descartó por su costo \Oh{m^2n}.
+\emph{Límites:} límite de resolución de la modularidad (Fortunato y Barthélemy, 2007) y comunidades internamente desconectadas en Louvain, que Leiden
+(Traag et al., 2019) corrige; LPA puede colapsar en una comunidad gigante y varía entre ejecuciones. \emph{Referencias:} \texttt{networkx} (\texttt{louvain\_communities}),
+\texttt{python-louvain}, igraph \texttt{community\_multilevel}, \texttt{leidenalg}; nuestra modularidad coincide con la de networkx y nuestro Louvain alcanza
+su $Q$ en \texttt{tests/}.

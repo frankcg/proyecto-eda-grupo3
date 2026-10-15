@@ -1,0 +1,21 @@
+\setlength{\tabcolsep}{3.5pt}\footnotesize
+\begin{tabular}{@{}lrl|lrl@{}}\toprule
+Estructura / operación & $b$ & Esperada & Estructura / operación & $b$ & Esperada \\\midrule
+LinkedQueue propia & 1.08 & 1 & Escaneo lineal autocompletar & 1.03 & 1 \\
+deque (C) & 1.00 & 1 & Bloom insertar & 1.00 & 1 \\
+list.pop(0) & 2.01 & 2 & set insertar & 1.13 & 1 \\
+Merge Sort propio & 1.21 & $\approx$1.05-1.1 & Bloom consultar 2n & 1.01 & 1 \\
+Timsort (C) & 1.13 & $\approx$1.05-1.1 & set consultar 2n & 1.15 & 1 \\
+BinaryHeap propio & 1.15 & $\approx$1.05-1.1 & MinHash+LSH consulta & 0.06 & $\approx$0 \\
+heapq (C) & 1.24 & $\approx$1.05-1.1 & Fuerza bruta Jaccard & 1.12 & 1 \\
+Lista ordenada insort & 1.60 & 2 & HNSW consulta (ef=50) & 0.11 & $\approx$0 \\
+HashTable propia & 1.09 & 1 & KNN exacto fuerza bruta & 1.06 & 1 \\
+dict (C) & 1.17 & 1 & KD-Tree 32D & 0.95 & $\approx$1 \\
+LRU propia (Zipf) & 0.96 & 1 & MinHash+LSH construir & 1.12 & 1 \\
+B+Tree insertar & 1.36 & $\approx$1.05-1.1 & HNSW construir & 1.04 & $\approx$1.1 \\
+B+Tree bulk load & 1.09 & 1 & PageRank & 1.07 & 1 \\
+Arreglo + insort & 1.68 & 2 & Louvain & 1.22 & $\approx$1-1.2 \\
+KD-Tree 4D consulta & 0.09 & $\approx$0-0.3 & Label Propagation & 1.22 & $\approx$1 \\
+Fuerza bruta consulta & 1.01 & 1 & Grado ponderado & 0.51 & 0-1 \\
+Trie autocompletar & 0.08 & 0 & & & \\
+\bottomrule\end{tabular}

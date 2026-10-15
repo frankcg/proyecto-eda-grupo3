@@ -1,0 +1,20 @@
+\textbf{Recorrido de un evento.} (1) E0 encola el evento en la FIFO; el consumidor extrae micro-lotes de tamaño variable (0.55–1.4$\times$5\,000, para simular
+picos). (2) E1 normaliza, rechaza precios negativos o tipos desconocidos, marca precios faltantes y elimina duplicados (intra-lote por Merge Sort, entre lotes por
+búsqueda binaria). (3) E2 inserta el lote en el heap; por \emph{tick} se atienden a lo más 5\,000 eventos (capacidad de servicio), así que en los picos esperan
+las vistas y no los pagos. (4) E3 enriquece con el registro del producto (vía LRU), completa el precio faltante, actualiza el perfil, la matriz dispersa y la
+orden. (5) E4 inserta la orden en el B+Tree temporal. (6) E5 obtiene vecinos por atributos para vistas y carritos. (7) E6 decide cada pago: Bloom$\to$verificación
+exacta y CMS$\to$umbral; las alertas vuelven a E2 con prioridad 0 y el estado (aprobado/bloqueado) se propaga a la orden. (8) Cada 20 lotes, E7 reconstruye
+MinHash+LSH con los conjuntos de usuarios por producto (solo compras aprobadas) y E8 lee del B+Tree las órdenes \textbf{aprobadas} de los últimos 7 días,
+construye el grafo de co-compra y recalcula PageRank y Louvain. (9) E9 actualiza los pesos del Trie (ventas $\times$ PageRank) y responde.
+
+\textbf{Puntuación de recomendaciones (E9).} Para un usuario con semillas $S$ (carrito, últimas compras y vistas), cada candidato $p$ recibe
+$0.45\,\widehat{\mathrm{PPR}}_S(p)+0.30\,\hat J_{\mathrm{LSH}}(p)+0.15\,\cos_{\mathrm{HNSW}}(p)+0.03\,[p\in\mathrm{KD}]+0.07\,\widehat{\mathrm{PR}}(p)$
+(cada término normalizado a $[0,1]$), se excluyen productos ya comprados y se seleccionan los $K$ mejores con un min-heap de tamaño $K$. Sin historial
+(arranque en frío) se devuelven los productos de mayor PageRank. Cada recomendación lleva su explicación (qué fuentes la generaron).
+
+\textbf{Decisiones de implementación.} (i) Todas las estructuras son propias; NumPy se usa para vectorizar núcleos numéricos (hashes del Bloom/CMS por lotes, distancias,
+\texttt{bincount} de PageRank), y existen versiones escalares (evento a evento) del Bloom y del CMS que el pipeline usa en línea. (ii) El B+Tree es un índice en
+disco real: los nodos se serializan en páginas de 4\,KB de un archivo y se leen/escriben a través del \emph{buffer pool} LRU de E3, lo que permite medir lecturas de página.
+(iii) Las etapas globales (E7, E8) son incrementales por micro-lotes y no por evento, ya que Louvain o la reconstrucción del LSH por evento serían
+\Oh{m} por evento. (iv) Corrección verificada con 14 pruebas (\texttt{tests/test\_structures.py}) contra \texttt{dict}, \texttt{heapq}, \texttt{bisect},
+fuerza bruta y \texttt{networkx}.

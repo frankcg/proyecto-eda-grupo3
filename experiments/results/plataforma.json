@@ -1,0 +1,9 @@
+{
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.30GHz",
+ "nucleos": 2,
+ "ram_gb": 7.8,
+ "so": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+ "python": "3.13.16",
+ "numpy": "2.5.3",
+ "semilla": 42
+}

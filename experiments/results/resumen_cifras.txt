@@ -1,0 +1,309 @@
+                      estructura             operacion        n  reps    media_s     std_s   us_por_op  mem_actual_mb  mem_pico_mb
+            LinkedQueue (propia)       enqueue+dequeue  1000000   100   0.440833  0.028710      0.2204            NaN          NaN
+            LinkedQueue (propia) n encolados (memoria)  1000000   100   0.418096  0.053068      0.4181         45.777       45.777
+        collections.deque (ref.)       enqueue+dequeue  1000000   100   0.038395  0.003490      0.0192            NaN          NaN
+             Merge Sort (propio)               ordenar  1000000    14   4.218718  0.122377      4.2187         15.687       69.085
+         sorted/Timsort (ref. C)               ordenar  1000000   100   0.280829  0.015201      0.2808         15.259       19.073
+       Búsqueda binaria (propia)             consultas  1000000    19   2.934988  0.168404      2.9350            NaN          NaN
+                 bisect (ref. C)             consultas  1000000    59   0.967936  0.048967      0.9679            NaN          NaN
+             BinaryHeap (propio)              push+pop  1000000    13   4.431641  0.098444      2.2158            NaN          NaN
+             BinaryHeap (propio)   n en cola (memoria)  1000000   100   0.415579  0.030005      0.4156        122.485      122.485
+                  heapq (ref. C)              push+pop  1000000    48   1.317394  0.072021      0.6587            NaN          NaN
+HashTable sondeo lineal (propia)               put+get  1000000    31   2.077554  0.483736      1.0388         32.001       48.001
+                   dict (ref. C)               put+get  1000000   100   0.255312  0.022469      0.1277         40.000       60.000
+               LRUCache (propia)          get/put Zipf  1000000   100   0.283832  0.018788      0.2838          1.173        1.736
+          OrderedDict LRU (ref.)          get/put Zipf  1000000   100   0.086366  0.011548      0.0864          1.118        1.680
+   B+Tree (propio, páginas 4 KB)              insertar  1000000     3  21.683674  0.649699     21.6837         11.843       12.872
+   B+Tree (propio, páginas 4 KB)      busqueda puntual  1000000   100   0.156970  0.009349     15.6970            NaN          NaN
+   B+Tree (propio, páginas 4 KB)  rango (~1000 claves)  1000000   100   0.013508  0.001292    135.0790            NaN          NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado  1000000    75   0.592980  0.090408      0.5930            NaN          NaN
+             KD-Tree 4D (propio)             construir  1000000     3   1.154073  0.011573      1.1541         30.858       38.152
+             KD-Tree 4D (propio)              KNN k=10  1000000   100   0.015157  0.001691    151.5680            NaN          NaN
+        KNN fuerza bruta (NumPy)              KNN k=10  1000000    49   1.143989  0.039706  11439.8860            NaN          NaN
+            LinkedQueue (propia)       enqueue+dequeue 10000000     3   7.277715  0.807692      0.3639            NaN          NaN
+            LinkedQueue (propia) n encolados (memoria) 10000000     3   5.840352  0.650865      0.5840        457.121      457.121
+        collections.deque (ref.)       enqueue+dequeue 10000000     3   0.438731  0.002700      0.0219            NaN          NaN
+             Merge Sort (propio)               ordenar 10000000     1  72.277136  0.000000      7.2277        152.656      686.551
+         sorted/Timsort (ref. C)               ordenar 10000000     3   4.472561  0.166694      0.4473        152.594      190.676
+       Búsqueda binaria (propia)             consultas 10000000     3   6.035993  0.173016      6.0360            NaN          NaN
+                 bisect (ref. C)             consultas 10000000     3   2.700375  0.053877      2.7004            NaN          NaN
+             BinaryHeap (propio)              push+pop 10000000     1  63.810354  0.000000      3.1905            NaN          NaN
+             BinaryHeap (propio)   n en cola (memoria) 10000000     3   7.452818  4.959781      0.7453       1294.406     1294.406
+                  heapq (ref. C)              push+pop 10000000     2  27.474362  0.470451      1.3737            NaN          NaN
+HashTable sondeo lineal (propia)               put+get 10000000     2  31.227314  0.004682      1.5614        256.070      384.070
+                   dict (ref. C)               put+get 10000000     3   4.856901  0.041415      0.2428        320.004      479.941
+               LRUCache (propia)          get/put Zipf 10000000     3   3.142792  0.075996      0.3143          2.996        3.000
+          OrderedDict LRU (ref.)          get/put Zipf 10000000     3   1.417534  0.049563      0.1418          0.000        0.000
+   B+Tree (propio, páginas 4 KB)              insertar 10000000     1 335.128008  0.000000     33.5128         14.383       14.383
+   B+Tree (propio, páginas 4 KB)      busqueda puntual 10000000     3   0.226305  0.008182     22.6305            NaN          NaN
+   B+Tree (propio, páginas 4 KB) rango (~10000 claves) 10000000     3   0.169899  0.003246   1698.9862            NaN          NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado 10000000     3  10.160681  0.119393      1.0161            NaN          NaN
+             KD-Tree 4D (propio)             construir 10000000     2  21.260656  0.919972      2.1261        309.355      383.758
+             KD-Tree 4D (propio)              KNN k=10 10000000     3   0.019127  0.000689    191.2660            NaN          NaN
+        KNN fuerza bruta (NumPy)              KNN k=10 10000000     2  21.101045  0.108482 211010.4480            NaN          NaN
+    Trie top-K cacheado (propio)              insertar  1000000     3  85.880980 10.380858     85.8810       1786.340     1786.340
+    Trie top-K cacheado (propio)     autocompletar k=8  1000000   100   0.001848  0.000100      1.8480            NaN          NaN
+        Escaneo lineal (ingenuo)     autocompletar k=8  1000000     3  19.250926  0.147260 962546.2940            NaN          NaN
+
+                      estructura             operacion        n  altura  paginas  lecturas_disco_por_consulta  pool_hit_rate  escrituras_disco  nodos_visitados  hit_rate  factor_carga  sondeos_por_op     nodos
+HashTable sondeo lineal (propia)               put+get     1000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN         0.488           1.192       NaN
+HashTable sondeo lineal (propia)               put+get    10000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN         0.610           1.391       NaN
+HashTable sondeo lineal (propia)               put+get   100000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN         0.381           1.393       NaN
+HashTable sondeo lineal (propia)               put+get  1000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN         0.477           1.314       NaN
+               LRUCache (propia)          get/put Zipf     1000     NaN      NaN                          NaN            NaN               NaN              NaN    0.2550           NaN             NaN       NaN
+          OrderedDict LRU (ref.)          get/put Zipf     1000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+               LRUCache (propia)          get/put Zipf    10000     NaN      NaN                          NaN            NaN               NaN              NaN    0.5351           NaN             NaN       NaN
+          OrderedDict LRU (ref.)          get/put Zipf    10000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+               LRUCache (propia)          get/put Zipf   100000     NaN      NaN                          NaN            NaN               NaN              NaN    0.7054           NaN             NaN       NaN
+          OrderedDict LRU (ref.)          get/put Zipf   100000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+               LRUCache (propia)          get/put Zipf  1000000     NaN      NaN                          NaN            NaN               NaN              NaN    0.8141           NaN             NaN       NaN
+          OrderedDict LRU (ref.)          get/put Zipf  1000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)              insertar     1000     2.0      9.0                          NaN            NaN               0.0              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)      busqueda puntual     1000     NaN      NaN                       0.0000         1.0000               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)     rango (~1 claves)     1000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado     1000     2.0      8.0                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)              insertar    10000     2.0     67.0                          NaN            NaN               0.0              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)      busqueda puntual    10000     NaN      NaN                       0.0000         1.0000               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)    rango (~10 claves)    10000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado    10000     2.0     58.0                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)              insertar   100000     3.0    727.0                          NaN            NaN               0.0              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)      busqueda puntual   100000     NaN      NaN                       0.0000         1.0000               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)   rango (~100 claves)   100000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado   100000     3.0    562.0                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)              insertar  1000000     3.0   7418.0                          NaN            NaN          585603.0              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)      busqueda puntual  1000000     NaN      NaN                       0.8690         0.8194               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)  rango (~1000 claves)  1000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado  1000000     3.0   5589.0                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)             construir     1000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)              KNN k=10     1000     NaN      NaN                          NaN            NaN               NaN             21.0       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)             construir    10000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)              KNN k=10    10000     NaN      NaN                          NaN            NaN               NaN             54.6       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)             construir   100000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)              KNN k=10   100000     NaN      NaN                          NaN            NaN               NaN             65.7       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)             construir  1000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)              KNN k=10  1000000     NaN      NaN                          NaN            NaN               NaN             67.8       NaN           NaN             NaN       NaN
+    Trie top-K cacheado (propio)              insertar     1000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN    7313.0
+    Trie top-K cacheado (propio)     autocompletar k=8     1000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+    Trie top-K cacheado (propio)              insertar    10000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN   55936.0
+    Trie top-K cacheado (propio)     autocompletar k=8    10000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+    Trie top-K cacheado (propio)              insertar   100000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN  445363.0
+    Trie top-K cacheado (propio)     autocompletar k=8   100000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+HashTable sondeo lineal (propia)               put+get 10000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN         0.596           1.422       NaN
+               LRUCache (propia)          get/put Zipf 10000000     NaN      NaN                          NaN            NaN               NaN              NaN    0.8818           NaN             NaN       NaN
+          OrderedDict LRU (ref.)          get/put Zipf 10000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)              insertar 10000000     4.0  72231.0                          NaN            NaN         9414755.0              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)      busqueda puntual 10000000     NaN      NaN                       1.6883         0.7790               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB) rango (~10000 claves) 10000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+   B+Tree (propio, páginas 4 KB)    bulk load ordenado 10000000     4.0  55867.0                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)             construir 10000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+             KD-Tree 4D (propio)              KNN k=10 10000000     NaN      NaN                          NaN            NaN               NaN             94.2       NaN           NaN             NaN       NaN
+    Trie top-K cacheado (propio)              insertar  1000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN 4310175.0
+    Trie top-K cacheado (propio)     autocompletar k=8  1000000     NaN      NaN                          NaN            NaN               NaN              NaN       NaN           NaN             NaN       NaN
+
+                        estructura    operacion        n  p_objetivo  reps  media_s  us_por_op  mem_actual_mb  mem_pico_mb  bits_por_elemento    k  fpr_empirica  fpr_teorica  falsos_negativos
+        Bloom Filter (vectorizado)     insertar     1000       0.010   100 0.000223     0.2230         0.0018       0.1796               9.59  7.0           NaN          NaN               NaN
+        Bloom Filter (vectorizado) consultar 2n     1000       0.010   100 0.000269     0.1343            NaN          NaN                NaN  NaN      0.007000     0.010035               0.0
+            set de Python (exacto)     insertar     1000       0.000   100 0.000061     0.0611         0.0653       0.0808                NaN  NaN           NaN          NaN               NaN
+            set de Python (exacto) consultar 2n     1000       0.000   100 0.000083     0.0414            NaN          NaN                NaN  NaN      0.000000          NaN               0.0
+    Bloom Filter (escalar, Python)     insertar     1000       0.010    20 0.002820     2.8205            NaN          NaN                NaN  NaN           NaN          NaN               NaN
+        Bloom Filter (vectorizado)     insertar    10000       0.010   100 0.001854     0.1854         0.0121       1.6815               9.59  7.0           NaN          NaN               NaN
+        Bloom Filter (vectorizado) consultar 2n    10000       0.010   100 0.002945     0.1473            NaN          NaN                NaN  NaN      0.010200     0.010039               0.0
+            set de Python (exacto)     insertar    10000       0.000   100 0.000414     0.0414         0.8388       1.0401                NaN  NaN           NaN          NaN               NaN
+            set de Python (exacto) consultar 2n    10000       0.000   100 0.000694     0.0347            NaN          NaN                NaN  NaN      0.000000          NaN               0.0
+    Bloom Filter (escalar, Python)     insertar    10000       0.010    20 0.034349     3.4349            NaN          NaN                NaN  NaN           NaN          NaN               NaN
+        Bloom Filter (vectorizado)     insertar   100000       0.010   100 0.013458     0.1346         0.1149      16.8047               9.59  7.0           NaN          NaN               NaN
+        Bloom Filter (vectorizado) consultar 2n   100000       0.010   100 0.024358     0.1218            NaN          NaN                NaN  NaN      0.010110     0.010039               0.0
+            set de Python (exacto)     insertar   100000       0.000   100 0.005190     0.0519         7.3846      10.1476                NaN  NaN           NaN          NaN               NaN
+            set de Python (exacto) consultar 2n   100000       0.000   100 0.010705     0.0535            NaN          NaN                NaN  NaN      0.000000          NaN               0.0
+    Bloom Filter (escalar, Python)     insertar   100000       0.010    20 0.275616     2.7562            NaN          NaN                NaN  NaN           NaN          NaN               NaN
+        Bloom Filter (vectorizado)     insertar 10000000       0.010     3 2.233007     0.2233        11.4271     195.4920               9.59  7.0           NaN          NaN               NaN
+        Bloom Filter (vectorizado) consultar 2n 10000000       0.010     3 3.079483     0.1540            NaN          NaN                NaN  NaN      0.010076     0.010039               0.0
+            set de Python (exacto)     insertar 10000000       0.000     3 1.766254     0.1766       594.4319     798.7259                NaN  NaN           NaN          NaN               NaN
+            set de Python (exacto) consultar 2n 10000000       0.000     3 3.239401     0.1620            NaN          NaN                NaN  NaN      0.000000          NaN               0.0
+        Bloom Filter (vectorizado)     insertar  1000000       0.010   100 0.189923     0.1899         1.1433     168.0368               9.59  7.0           NaN          NaN               NaN
+        Bloom Filter (vectorizado) consultar 2n  1000000       0.010   100 0.300520     0.1503            NaN          NaN                NaN  NaN      0.009998     0.010039               0.0
+            set de Python (exacto)     insertar  1000000       0.000   100 0.089683     0.0897        65.8448      89.4743                NaN  NaN           NaN          NaN               NaN
+            set de Python (exacto) consultar 2n  1000000       0.000   100 0.144645     0.0723            NaN          NaN                NaN  NaN      0.000000          NaN               0.0
+    Bloom Filter (escalar, Python)     insertar  1000000       0.010    20 2.797387     2.7974            NaN          NaN                NaN  NaN           NaN          NaN               NaN
+  Bloom Filter (vectorizado) p=0.1     insertar  1000000       0.100   100 0.073013     0.0730         0.5720      72.0980               4.79  3.0           NaN          NaN               NaN
+  Bloom Filter (vectorizado) p=0.1 consultar 2n  1000000       0.100   100 0.144774     0.0724            NaN          NaN                NaN  NaN      0.101130     0.100713               0.0
+Bloom Filter (vectorizado) p=0.001     insertar  1000000       0.001    60 0.312387     0.3124         1.7146     240.1337              14.38 10.0           NaN          NaN               NaN
+Bloom Filter (vectorizado) p=0.001 consultar 2n  1000000       0.001   100 0.512727     0.2564            NaN          NaN                NaN  NaN      0.001013     0.001000               0.0
+
+                        estructura        n  reps  media_s  us_por_op  mem_actual_mb  mem_pico_mb  claves_distintas  subestimaciones  error_abs_medio  error_max  cota_eps_N  frac_dentro_cota  error_rel_top100  error_rel_medio
+    Count-Min Sketch (vectorizado)     1000   100 0.000166     0.1658         0.1045       0.2851             100.0              0.0            0.000        0.0         1.0               1.0           0.00000           0.0000
+             Counter/dict (exacto)     1000   100 0.000071     0.0709         0.0082       0.0480             100.0              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+Count-Min Sketch (escalar, Python)     1000    20 0.002599     2.5990            NaN          NaN               NaN              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+    Count-Min Sketch (vectorizado)    10000   100 0.000409     0.0409         0.1045       1.0221             998.0              0.0            0.012        7.0        10.0               1.0           0.00000           0.0022
+             Counter/dict (exacto)    10000   100 0.000486     0.0486         0.0697       0.4638             998.0              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+Count-Min Sketch (escalar, Python)    10000    20 0.024654     2.4654            NaN          NaN               NaN              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+    Count-Min Sketch (vectorizado)   100000   100 0.004340     0.0434         0.1045       9.2619            9896.0              0.0            7.605       35.0       100.0               1.0           0.05527           1.9831
+             Counter/dict (exacto)   100000   100 0.006601     0.0660         0.6199       4.5289            9896.0              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+Count-Min Sketch (escalar, Python)   100000    20 0.253507     2.5351            NaN          NaN               NaN              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+    Count-Min Sketch (vectorizado) 10000000     3 0.654477     0.0654         0.1046     176.1071          945363.0              0.0         1505.257    40991.0      9997.4               1.0           0.11883         616.1397
+             Counter/dict (exacto) 10000000     3 2.046290     0.2046        72.2859     470.5709          945363.0              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+    Count-Min Sketch (vectorizado)  1000000   100 0.057391     0.0574         0.1045      91.6593           97306.0              0.0          138.276      380.0       999.7               1.0           0.10850          45.9303
+             Counter/dict (exacto)  1000000   100 0.122943     0.1229         8.3246      48.5577           97306.0              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+Count-Min Sketch (escalar, Python)  1000000    20 2.493726     2.4937            NaN          NaN               NaN              NaN              NaN        NaN         NaN               NaN               NaN              NaN
+
+                          estructura            operacion        n  reps     media_s   us_por_op  mem_actual_mb  mem_pico_mb  recall_J05  recall_top10  candidatos_prom  recall_10  nodos_visitados  nodos_totales  construir_s  umbral
+       MinHash+LSH (k=64, b=32, r=2)     construir indice     1000    20    0.009750       9.749           0.38        10.38         NaN           NaN              NaN        NaN              NaN            NaN          NaN   0.177
+       MinHash+LSH (k=64, b=32, r=2)      consulta top-10     1000   100    0.011758     117.580            NaN          NaN      1.0000        0.1886              1.6        NaN              NaN            NaN          NaN     NaN
+Fuerza bruta Jaccard (NumPy, O(nnz))      consulta top-10     1000    20    0.006866      68.660           0.05          NaN      1.0000        1.0000           1000.0        NaN              NaN            NaN          NaN     NaN
+       MinHash+LSH (k=64, b=32, r=2)     construir indice    10000    20    0.117390      11.739           3.67       103.90         NaN           NaN              NaN        NaN              NaN            NaN          NaN   0.177
+       MinHash+LSH (k=64, b=32, r=2)      consulta top-10    10000   100    0.015871     158.710            NaN          NaN      1.0000        0.2350              8.0        NaN              NaN            NaN          NaN     NaN
+Fuerza bruta Jaccard (NumPy, O(nnz))      consulta top-10    10000    20    0.052872     528.720           0.46          NaN      1.0000        1.0000          10000.0        NaN              NaN            NaN          NaN     NaN
+       MinHash+LSH (k=64, b=32, r=2)     construir indice   100000     9    2.769350      27.694          36.63      1035.37         NaN           NaN              NaN        NaN              NaN            NaN          NaN   0.177
+       MinHash+LSH (k=64, b=32, r=2)      consulta top-10   100000   100    0.017388     173.880            NaN          NaN      1.0000        0.2520              9.8        NaN              NaN            NaN          NaN     NaN
+Fuerza bruta Jaccard (NumPy, O(nnz))      consulta top-10   100000    20    0.535906    5359.060           4.58          NaN      1.0000        1.0000         100000.0        NaN              NaN            NaN          NaN     NaN
+       MinHash+LSH (k=64, b=32, r=2)     construir indice  1000000     3   30.637030      30.637         366.22      2877.30         NaN           NaN              NaN        NaN              NaN            NaN          NaN   0.177
+       MinHash+LSH (k=64, b=32, r=2)      consulta top-10  1000000   100    0.019271     192.710            NaN          NaN      1.0000        0.2150              9.2        NaN              NaN            NaN          NaN     NaN
+Fuerza bruta Jaccard (NumPy, O(nnz))      consulta top-10  1000000     6    8.435943   84359.430          45.79          NaN      1.0000        1.0000        1000000.0        NaN              NaN            NaN          NaN     NaN
+                  LSH curva b=32 r=2               ajuste   100000     1    0.000187         NaN            NaN          NaN      1.0000           NaN              9.8        NaN              NaN            NaN        2.034   0.177
+                  LSH curva b=16 r=4               ajuste   100000     1    0.000119         NaN            NaN          NaN      0.7917           NaN              0.5        NaN              NaN            NaN        3.294   0.500
+                   LSH curva b=8 r=8               ajuste   100000     1    0.000117         NaN            NaN          NaN      0.3500           NaN              0.2        NaN              NaN            NaN        2.584   0.771
+                  LSH curva b=64 r=2               ajuste   100000     1    0.000311         NaN            NaN          NaN      1.0000           NaN             16.1        NaN              NaN            NaN        9.992   0.125
+                  LSH curva b=32 r=4               ajuste   100000     1    0.000164         NaN            NaN          NaN      0.9000           NaN              0.8        NaN              NaN            NaN        6.733   0.420
+                HNSW (M=16, efC=100)            construir     1000     1    2.470300    2470.290           0.51         0.56         NaN           NaN              NaN        NaN              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100)  consulta k=10 ef=50     1000   100    0.040178     401.780            NaN          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+     KNN exacto fuerza bruta (NumPy)        consulta k=10     1000   100    0.002908      29.080           0.12          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+                KD-Tree 32D (exacto)        consulta k=10     1000    10    0.004307     215.360            NaN          NaN         NaN           NaN              NaN      1.000             62.2           63.0          NaN     NaN
+                HNSW (M=16, efC=100)            construir    10000     1   29.081100    2908.110           4.72         4.76         NaN           NaN              NaN        NaN              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100)  consulta k=10 ef=50    10000   100    0.041800     418.000            NaN          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+     KNN exacto fuerza bruta (NumPy)        consulta k=10    10000   100    0.026894     268.940           1.22          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+                KD-Tree 32D (exacto)        consulta k=10    10000    10    0.055882    2794.090            NaN          NaN         NaN           NaN              NaN      1.000            968.3         1023.0          NaN     NaN
+                HNSW (M=16, efC=100)            construir   100000     1  296.744100    2967.440          48.87        48.92         NaN           NaN              NaN        NaN              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100)  consulta k=10 ef=10   100000   100    0.023565     235.650            NaN          NaN         NaN           NaN              NaN      0.986              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100)  consulta k=10 ef=20   100000   100    0.031652     316.520            NaN          NaN         NaN           NaN              NaN      0.989              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100)  consulta k=10 ef=50   100000   100    0.053173     531.730            NaN          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100) consulta k=10 ef=100   100000   100    0.073936     739.360            NaN          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100) consulta k=10 ef=200   100000   100    0.111324    1113.240            NaN          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+     KNN exacto fuerza bruta (NumPy)        consulta k=10   100000   100    0.269066    2690.660          12.21          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+                KD-Tree 32D (exacto)        consulta k=10   100000    10    0.411859   20592.970            NaN          NaN         NaN           NaN              NaN      1.000           7236.1         8191.0          NaN     NaN
+                HNSW (M=16, efC=100)            construir  1000000     1 3324.310900    3324.310         321.35          NaN         NaN           NaN              NaN        NaN              NaN            NaN          NaN     NaN
+                HNSW (M=16, efC=100)  consulta k=10 ef=50  1000000   100    0.083868     838.680            NaN          NaN         NaN           NaN              NaN      0.989              NaN            NaN          NaN     NaN
+     KNN exacto fuerza bruta (NumPy)        consulta k=10  1000000    11    4.521525   45215.250         122.07          NaN         NaN           NaN              NaN      1.000              NaN            NaN          NaN     NaN
+                KD-Tree 32D (exacto)        consulta k=10  1000000    10    3.212054  160602.690            NaN          NaN         NaN           NaN              NaN      1.000          53635.2        65535.0          NaN     NaN
+       MinHash+LSH (k=64, b=32, r=2)     construir indice 10000000     1  232.621630      23.262        2460.63      2536.88         NaN           NaN              NaN        NaN              NaN            NaN          NaN   0.177
+       MinHash+LSH (k=64, b=32, r=2)      consulta top-10 10000000     3    0.004458     222.920            NaN          NaN      1.0000        0.1500              9.9        NaN              NaN            NaN          NaN     NaN
+Fuerza bruta Jaccard (NumPy, O(nnz))      consulta top-10 10000000     1   41.154157 2057707.840         457.76          NaN      1.0000        1.0000       10000000.0        NaN              NaN            NaN          NaN     NaN
+
+                        algoritmo        n   nodos  aristas  reps    media_s     std_s  iteraciones  modularidad  modularidad_std  comunidades  comunidades_std   mayor  mediana  estabilidad_nmi  nmi_vs_plantadas  spearman_vs_grado  solapamiento_topK  mem_pico_mb
+PageRank (iteración de potencias)     1000     125      594   100   0.000441  0.000183         42.0          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             0.9897               1.00        0.032
+      Ranking por grado ponderado     1000     125      594   100   0.000009  0.000001          NaN          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             1.0000               1.00          NaN
+                          Louvain     1000     125      594    10   0.001300  0.000100          NaN      0.48802          0.00088          5.0             0.00    58.0     21.0           0.9582            0.9125                NaN                NaN        0.110
+                Label Propagation     1000     125      594    10   0.000640  0.000100          NaN      0.48378          0.00545          5.0             0.00    59.0     21.0           0.9345            0.8785                NaN                NaN        0.140
+PageRank (iteración de potencias)    10000    1250     7146   100   0.001570  0.000334         38.0          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             0.9874               0.95        0.368
+      Ranking por grado ponderado    10000    1250     7146   100   0.000019  0.000047          NaN          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             1.0000               1.00          NaN
+                          Louvain    10000    1250     7146    10   0.025610  0.004700          NaN      0.58654          0.00017         17.0             0.00   310.0     54.0           0.9854            0.9127                NaN                NaN        1.630
+                Label Propagation    10000    1250     7146    10   0.015960  0.003230          NaN      0.57499          0.01832         19.0             1.35   333.0     47.0           0.9115            0.9007                NaN                NaN        1.930
+PageRank (iteración de potencias)   100000   12500    76778   100   0.022477  0.001941         39.0          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             0.9845               0.98        3.909
+      Ranking por grado ponderado   100000   12500    76778   100   0.000022  0.000007          NaN          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             1.0000               1.00          NaN
+                          Louvain   100000   12500    76778    10   0.429720  0.082950          NaN      0.67063          0.00001         56.0             0.00   783.0    184.0           0.9970            0.9369                NaN                NaN       18.250
+                Label Propagation   100000   12500    76778    10   0.272550  0.039320          NaN      0.66908          0.00105         85.0             2.25   805.0    133.0           0.9441            0.9266                NaN                NaN       21.410
+PageRank (iteración de potencias)  1000000  125000   835535   100   0.261042  0.013991         39.0          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             0.9852               0.98       42.183
+      Ranking por grado ponderado  1000000  125000   835535   100   0.000084  0.000019          NaN          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             1.0000               1.00          NaN
+                          Louvain  1000000  125000   835535     5   8.709070  0.628060          NaN      0.66949          0.00001        167.0             0.55 14491.0    431.0           0.9977            0.9257                NaN                NaN      147.340
+                Label Propagation  1000000  125000   835535     5   5.050850  0.512210          NaN      0.66749          0.00049        519.0            12.69 15397.0      2.0           0.9389            0.9203                NaN                NaN      217.790
+PageRank (iteración de potencias) 10000000 1250000  8641533     3   8.798335  0.248726         38.0          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             0.9849               0.99      407.629
+      Ranking por grado ponderado 10000000 1250000  8641533     3   0.001149  0.000349          NaN          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             1.0000               1.00          NaN
+                          Louvain 10000000 1250000  8641533     2 152.040360  1.042540          NaN      0.68895          0.00000        553.0             0.00 54995.0   1360.0           0.9987            0.9307                NaN                NaN     1768.820
+                Label Propagation 10000000 1250000  8641533     2  77.877300 11.490010          NaN      0.68800          0.00001       4722.0            47.38 58061.0      2.0           0.9452            0.9272                NaN                NaN     2385.280
+PageRank (iteración de potencias) 10000000 1250000  8641533     3   8.647440  0.127438         38.0          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             0.9849               0.99      404.883
+      Ranking por grado ponderado 10000000 1250000  8641533     3   0.001173  0.000266          NaN          NaN              NaN          NaN              NaN     NaN      NaN              NaN               NaN             1.0000               1.00          NaN
+
+       n  eventos_procesados  reps  setup_s   run_s  total_s  throughput_ev_s  rss_pico_mb  ordenes_aprobadas  ordenes_bloqueadas  alertas  refrescos  micro_lote     E0_s  E0_us     E1_s  E1_us     E2_s  E2_us    E3_s  E3_us   E4_s  E4_us     E5_s  E5_us    E6_s  E6_us     E7_s    E7_us    E8_s  E8_us    E9_s  E9_us
+   10000                9996     1    40.72    0.97    41.69            10333        115.4                348                   2        3          1        5000   0.1047  10.27   0.0390   3.83   0.0517   5.17  0.0524   5.24 0.0013   3.66   0.4052  55.86  0.0488  90.59  39.6163 52126.71  0.1252    NaN  0.0239    NaN
+  100000               99901     1    40.65    8.65    49.30            11551        196.6               3480                  17        3          5        5000   0.4901   4.80   0.5183   5.08   0.4817   4.82  0.5166   5.17 0.0138   3.94   2.7741  37.19  0.3629  99.22  40.4522  5466.51  1.3851    NaN  0.5400    NaN
+ 1000000              999061     1    42.93  131.52   174.44             7597       1084.5              34808                 146       20         22        5000   7.0940   6.95  15.3573  15.06   7.1191   7.13  7.1187   7.13 0.1639   4.68  27.8785  37.37  2.8069  77.85  76.9014  1023.06 10.5509    NaN  8.6915    NaN
+10000000             9990165     1    55.38 1301.85  1357.23             7674       4573.8             348074                1405      200         21       10000 153.9815  15.10 151.3621  14.84 113.6767  11.38 95.4895   9.56 1.6796   4.80 285.2306  38.26 22.7002  63.09 394.8082   525.81 21.1117    NaN 14.9299    NaN
+       n                                                                                                                                                                             espera_ticks
+   10000 {"alerta": 0.0, "pago": 0.0, "compra_express/premium": 0.0, "compra_estandar": 0.0, "compra_programada": 0.0, "devolucion": 0.0, "carrito": 0.0, "resena": 0.0, "vista/busqueda": 0.134}
+  100000  {"alerta": 0.0, "pago": 0.0, "compra_express/premium": 0.0, "compra_estandar": 0.0, "compra_programada": 0.0, "devolucion": 0.0, "carrito": 0.0, "resena": 0.0, "vista/busqueda": 0.55}
+ 1000000 {"alerta": 0.0, "pago": 0.0, "compra_express/premium": 0.0, "compra_estandar": 0.0, "compra_programada": 0.0, "devolucion": 0.0, "carrito": 0.0, "resena": 0.0, "vista/busqueda": 0.472}
+10000000 {"alerta": 0.0, "pago": 0.0, "compra_express/premium": 0.0, "compra_estandar": 0.0, "compra_programada": 0.0, "devolucion": 0.0, "carrito": 0.0, "resena": 0.0, "vista/busqueda": 0.664}
+{
+"nodos_activos": 5681,
+"aristas": 15390,
+"ordenes": 8269,
+"Louvain": {
+"modularidad": 0.755274399892303,
+"modularidad_std": 0.0017812959145354084,
+"tiempo_s": 0.45155080960003036,
+"tiempo_std": 0.08371674523203006,
+"comunidades": 221,
+"mayor": 829,
+"mediana": 2.0,
+"singletons": 0,
+"estabilidad_nmi": 0.8655360941893049,
+"tamanos_top10": [
+829,
+671,
+574,
+497,
+377,
+308,
+290,
+234,
+206,
+192
+]
+},
+"Label Propagation": {
+"modularidad": 0.630270471505566,
+"modularidad_std": 0.011097944555931964,
+"tiempo_s": 0.19061927809998452,
+"tiempo_std": 0.06702282741473647,
+"comunidades": 848,
+"mayor": 372,
+"mediana": 3.0,
+"singletons": 0,
+"estabilidad_nmi": 0.8601957405104991,
+"tamanos_top10": [
+372,
+369,
+327,
+152,
+150,
+138,
+112,
+92,
+90,
+85
+]
+}
+}
+        estructura/operación   metrica  pendiente_ajustada                   esperada  n_min    n_max
+          LinkedQueue propia   media_s               1.082    1 (O(n) total, O(1)/op)   1000 10000000
+                   deque (C)   media_s               0.996                          1   1000 10000000
+                 list.pop(0)   media_s               2.008                  2 (O(n²))   1000   100000
+           Merge Sort propio   media_s               1.205        ≈1.05-1.1 (n log n)   1000 10000000
+                 Timsort (C)   media_s               1.131        ≈1.05-1.1 (n log n)   1000 10000000
+           BinaryHeap propio   media_s               1.145        ≈1.05-1.1 (n log n)   1000 10000000
+                   heapq (C)   media_s               1.239                  ≈1.05-1.1   1000 10000000
+       Lista ordenada insort   media_s               1.605          2 (O(n²) memmove)   1000   100000
+            HashTable propia   media_s               1.090                1 (O(1)/op)   1000 10000000
+                    dict (C)   media_s               1.173                          1   1000 10000000
+           LRU propia (Zipf)   media_s               0.958                          1   1000 10000000
+             B+Tree insertar   media_s               1.358      ≈1.05-1.1 (n log_B n)   1000 10000000
+            B+Tree bulk load   media_s               1.089                   1 (O(n))   1000 10000000
+            Arreglo + insort   media_s               1.675                  2 (O(n²))   1000   100000
+         KD-Tree 4D consulta us_por_op               0.093 ≈0-0.3 (O(log n) esperado)   1000 10000000
+       Fuerza bruta consulta us_por_op               1.009                   1 (O(n))   1000 10000000
+          Trie autocompletar us_por_op               0.084               0 (O(|p|+K))   1000  1000000
+Escaneo lineal autocompletar us_por_op               1.026                          1   1000  1000000
+              Bloom insertar   media_s               1.001                          1   1000 10000000
+                set insertar   media_s               1.126                          1   1000 10000000
+          Bloom consultar 2n   media_s               1.013                          1   1000 10000000
+            set consultar 2n   media_s               1.150                          1   1000 10000000
+        MinHash+LSH consulta us_por_op               0.064             ≈0 (sublineal)   1000 10000000
+        Fuerza bruta Jaccard us_por_op               1.116                   1 (O(n))   1000 10000000
+       HNSW consulta (ef=50) us_por_op               0.106              ≈0 (O(log n))   1000  1000000
+     KNN exacto fuerza bruta us_por_op               1.058                          1   1000  1000000
+                 KD-Tree 32D us_por_op               0.949 ≈1 (maldición dimensional)   1000  1000000
+       MinHash+LSH construir   media_s               1.117                 1 (O(n·k))   1000 10000000
+              HNSW construir   media_s               1.040          ≈1.1 (O(n log n))   1000  1000000
+                    PageRank   media_s               1.073     1 (O(m) por iteración)    594  8641533
+                     Louvain   media_s               1.219        ≈1-1.2 (O(m log n))    594  8641533
+           Label Propagation   media_s               1.219    ≈1 (O(m) por iteración)    594  8641533
+             Grado ponderado   media_s               0.513         0-1 (precomputado)    594  8641533
