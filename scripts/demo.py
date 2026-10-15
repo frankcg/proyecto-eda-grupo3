@@ -20,6 +20,11 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+# En Windows la consola/tubería usa cp1252 y falla con ▶, →, tildes, etc.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
+
 from ecostream.dashboard import build_dashboard  # noqa: E402
 from ecostream.data.generator import ET, StreamConfig, generate_stream, make_catalog  # noqa: E402
 from ecostream.graph.communities import community_stats, label_propagation, louvain, modularity  # noqa: E402
