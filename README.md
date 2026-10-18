@@ -79,12 +79,107 @@ En sesiones posteriores basta con activar el entorno (`.\.venv\Scripts\Activate.
 | Paso | Comando | Tiempo aprox. | Resultado |
 |---|---|---|---|
 | Pruebas de corrección | `python -m pytest -q tests` | ~15 s | 14 pruebas contra dict, heapq, bisect, fuerza bruta y networkx |
-| Demo de punta a punta | `python scripts/demo.py --events 300000` | ~1 min | Recorrido por las 10 etapas en consola; genera `docs/demo_resumen.json` y `docs/dashboard.html` (abrir en el navegador). Para guardar también la salida: `python -X utf8 scripts/demo.py --events 300000 \| Tee-Object docs/demo_output.txt` (PowerShell) o `... \| tee docs/demo_output.txt` (bash) |
-| Experimentos 1K–10M (opcional) | `bash experiments/run_all.sh` | ~3–4 h (2 vCPU) | CSV en `experiments/results/` (en Windows, ejecutar con Git Bash) |
+| Demo de punta a punta | `python scripts/demo.py` | ~3–4 min | Recorrido por las 10 etapas en consola; genera `docs/demo_resumen.json` y `docs/dashboard.html` (abrir en el navegador) |
+| Experimentos 1K–10M (opcional) | ver sección 4 | minutos a horas | CSV en `experiments/results/` |
 | Figuras log-log (opcional) | `python experiments/plots.py` | segundos | PNG en `experiments/figures/` |
 | Notebooks (opcional) | `python notebooks/build_notebooks.py` | minutos | Regenera y ejecuta `notebooks/*.ipynb` |
 
 Los resultados de los experimentos y las figuras ya están versionados en el repositorio, por lo que los pasos opcionales solo son necesarios para reproducirlos.
+
+### 3. Parámetros de la demo
+
+```powershell
+python scripts/demo.py --events 300000 --products 20000 --seed 42 --batch 5000 --out docs
+```
+
+| Parámetro | Qué controla | Por defecto |
+|---|---|---|
+| `--events` | Eventos generados (se añade un 2 % de duplicados: 300 000 → 306 000) | 300000 |
+| `--products` | Tamaño del catálogo | 20000 |
+| `--seed` | Semilla del generador: la misma semilla produce exactamente los mismos datos y resultados | 42 |
+| `--batch` | Tamaño del micro-lote de E0 | 5000 |
+| `--out` | Carpeta de salida de `dashboard.html` y `demo_resumen.json` | `docs` |
+
+Ejecutar con otros valores sin sobrescribir los archivos de la presentación:
+
+```powershell
+python scripts/demo.py --events 100000 --products 5000 --seed 7 --out pruebas/seed7
+```
+
+Para guardar también la salida de consola en UTF-8:
+
+```powershell
+python scripts/demo.py | Out-File -Encoding utf8 docs/demo_output.txt     # PowerShell
+python scripts/demo.py | tee docs/demo_output.txt                          # bash
+```
+
+> En PowerShell 5.1 no usar `tee`/`Tee-Object`: guardan el archivo en UTF-16.
+
+### 4. Experimentos (componente 3 del enunciado)
+
+Los experimentos son independientes de la demo: miden cada estructura por separado en las escalas 1K, 10K, 100K, 1M y 10M, con hasta 100 repeticiones (promedio, desviación estándar, memoria con `tracemalloc`, semilla 42 fija en `experiments/harness.py`).
+
+| Script | Qué compara |
+|---|---|
+| `experiments/bench_base.py` | Estructuras base E0–E5: FIFO, Merge Sort, heap, hash, LRU, B+Tree, KD-Tree |
+| `experiments/bench_prob.py` | E6: Bloom Filter y Count-Min Sketch vs. diccionario exacto (tiempo, memoria, falsos positivos, error de frecuencia) |
+| `experiments/bench_similarity.py` | E7: MinHash+LSH vs. fuerza bruta; HNSW vs. KNN exacto (tiempo, recall@K, memoria) |
+| `experiments/bench_graph.py` | E8: PageRank vs. grado; Louvain vs. Label Propagation (modularidad, tiempo, estabilidad) |
+| `experiments/bench_pipeline.py` | Pipeline completo de punta a punta |
+
+Cada script acepta `--min` y `--max` (tamaños `1e3`, `1e4`, `1e5`, `1e6`, `1e7`) y `--only=...` para medir solo algunas estructuras. Para un solo tamaño se usa el mismo valor en ambos. Los resultados se **acumulan** en `experiments/results/*.csv`: correr un tamaño solo reemplaza las filas de ese tamaño.
+
+**Un tamaño (ejemplo: 1K):**
+
+```powershell
+python experiments/bench_base.py       --min=1e3 --max=1e3
+python experiments/bench_prob.py       --min=1e3 --max=1e3
+python experiments/bench_similarity.py --min=1e3 --max=1e3
+python experiments/bench_graph.py      --min=1e3 --max=1e3
+python experiments/bench_pipeline.py   --min=1e3 --max=1e3
+```
+
+o en una línea:
+
+```powershell
+foreach ($b in "base","prob","similarity","graph","pipeline") { python experiments/bench_$b.py --min=1e3 --max=1e3 }
+```
+
+**Todos los tamaños, en orden (1K → 10M):**
+
+```powershell
+foreach ($n in "1e3","1e4","1e5","1e6","1e7") {
+    Write-Host "===== Tamaño $n ====="
+    if ($n -eq "1e6") { $env:HNSW_MAX = "1000000" }
+    foreach ($b in "base","prob","similarity","graph","pipeline") {
+        python experiments/bench_$b.py --min=$n --max=$n
+    }
+}
+python experiments/plots.py        # figuras log-log y pendientes
+```
+
+Alternativa en bash (paraleliza hasta 1M y luego corre 10M; ~3–4 h en 2 vCPU): `bash experiments/run_all.sh`.
+
+Notas:
+
+- **`bench_pipeline.py`** empieza en 10K: con 1K no hace nada (el pipeline completo no es representativo a esa escala).
+- **HNSW** se omite por defecto en tamaños mayores a 100K porque su construcción es lenta; `$env:HNSW_MAX = "1000000"` lo habilita hasta 1M. En 10M no se mide.
+- **10M** requiere varios GB de RAM (sobre todo el grafo y el pipeline); si no es viable, se justifica en el informe, como permite el enunciado.
+- **Repeticiones:** `min(100, presupuesto / tiempo)`, con un presupuesto de 60 s por medición; se ajusta con `$env:BENCH_BUDGET = "30"`.
+- Si se vuelven a ejecutar, los números del informe deben actualizarse para que coincidan con los CSV.
+
+### 5. Comandos para la presentación
+
+Antes de la presentación:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pytest -q tests                                          # 14 pruebas deben pasar
+python scripts/demo.py | Out-File -Encoding utf8 docs/demo_output.txt
+start docs/dashboard.html
+```
+
+Durante la presentación no se ejecuta la demo (tarda varios minutos): se muestran `docs/demo_output.txt` y `docs/dashboard.html` siguiendo el [guion de la demo](docs/presentacion/guion_demo.md). Los experimentos se presentan con las figuras de `experiments/figures/`.
 
 Para usar el dataset real REES46 (Kaggle) en lugar del stream sintético:
 

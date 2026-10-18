@@ -1,9 +1,10 @@
 # Guion de la demo (3-4 minutos)
 
-Comando (preparar con antelación; tarda ~1 min, así que conviene ejecutarlo antes y mostrar la salida y el panel):
+Comando (preparar con antelación; tarda ~3-4 min, así que conviene ejecutarlo antes y mostrar la salida y el panel):
 
-```bash
-python scripts/demo.py --events 300000 | tee docs/demo_output.txt
+```powershell
+python scripts/demo.py | Out-File -Encoding utf8 docs/demo_output.txt   # PowerShell
+python scripts/demo.py | tee docs/demo_output.txt                        # bash
 ```
 
 | Tiempo | Quién | Qué mostrar | Qué decir |
