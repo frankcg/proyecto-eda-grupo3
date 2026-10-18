@@ -2,8 +2,8 @@
  "summary": {
   "eventos_generados": 306000,
   "eventos_procesados": 299696,
-  "segundos": 45.87,
-  "throughput_ev_s": 6534,
+  "segundos": 47.02,
+  "throughput_ev_s": 6374,
   "ordenes": {
    "aprobado": 10448,
    "bloqueado": 43,
@@ -61,17 +61,17 @@
  "stages": [
   {
    "etapa": "E0 Ingesta (FIFO lista enlazada)",
-   "segundos": 2.5512,
+   "segundos": 2.7283,
    "entradas": 306000,
    "salidas": 306000,
-   "us_por_item": 8.34
+   "us_por_item": 8.92
   },
   {
    "etapa": "E1 Preprocesamiento (Merge Sort + búsqueda binaria)",
-   "segundos": 4.4411,
+   "segundos": 4.946,
    "entradas": 306000,
    "salidas": 299696,
-   "us_por_item": 14.51,
+   "us_por_item": 16.16,
    "normalizado_tipo": 304.0,
    "precio_faltante": 327.0,
    "normalizado_precio": 279.0,
@@ -82,39 +82,39 @@
   },
   {
    "etapa": "E2 Cola de prioridades (min-heap)",
-   "segundos": 3.0168,
+   "segundos": 3.3273,
    "entradas": 299696,
    "salidas": 299702,
-   "us_por_item": 10.07
+   "us_por_item": 11.1
   },
   {
    "etapa": "E3 Hash table + LRU + matriz dispersa",
-   "segundos": 2.4743,
+   "segundos": 2.6577,
    "entradas": 299696,
    "salidas": 299696,
-   "us_por_item": 8.26,
+   "us_por_item": 8.87,
    "precio_completado": 312.0
   },
   {
    "etapa": "E4 B+Tree (índice en disco)",
-   "segundos": 0.0839,
+   "segundos": 0.086,
    "entradas": 10498,
    "salidas": 10498,
-   "us_por_item": 8.0
+   "us_por_item": 8.2
   },
   {
    "etapa": "E5 KD-Tree (KNN exacto)",
-   "segundos": 18.0821,
+   "segundos": 18.6212,
    "entradas": 246430,
    "salidas": 246430,
-   "us_por_item": 73.38
+   "us_por_item": 75.56
   },
   {
    "etapa": "E6 Bloom Filter + Count-Min Sketch",
-   "segundos": 1.9617,
+   "segundos": 2.0815,
    "entradas": 10881,
    "salidas": 10881,
-   "us_por_item": 180.29,
+   "us_por_item": 191.29,
    "pagos_aprobado": 10495.0,
    "bloom_positivos": 383.0,
    "bloom_verificados": 383.0,
@@ -125,16 +125,16 @@
   },
   {
    "etapa": "E7 MinHash+LSH y HNSW",
-   "segundos": 105.3193,
+   "segundos": 93.8314,
    "entradas": 22756,
    "salidas": 22756,
-   "us_por_item": 4628.2,
+   "us_por_item": 4123.37,
    "lsh_reconstrucciones": 4.0,
    "productos_en_lsh": 17043
   },
   {
    "etapa": "E8 Grafo co-compra: PageRank + Louvain",
-   "segundos": 3.5973,
+   "segundos": 3.3714,
    "entradas": 0,
    "salidas": 0,
    "reconstrucciones": 4.0,
@@ -145,10 +145,10 @@
   },
   {
    "etapa": "E9 Servicio: Trie, Top-K, panel",
-   "segundos": 2.5372,
+   "segundos": 2.0989,
    "entradas": 7,
    "salidas": 0,
-   "us_por_item": 362456.36
+   "us_por_item": 299848.43
   }
  ],
  "watch": {
