@@ -57,7 +57,7 @@ def run(n):
                          "singletons": st["singletons"],
                          "estabilidad_nmi": float(np.mean([nmi(a[act], b[act]) for a, b in itertools.combinations(labs, 2)])),
                          "tamanos_top10": [int(x) for x in st["sizes"][:10]]}
-        with open(RESULTS / "comunidades_grafo_pipeline.json", "w") as f:
+        with open(RESULTS / "comunidades_grafo_pipeline.json", "w", encoding="utf-8") as f:
             json.dump(out, f, indent=1)
         print(json.dumps(out, indent=1))
 

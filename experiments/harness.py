@@ -95,12 +95,12 @@ class Recorder:
         self.path = RESULTS / f"{name}.csv"
         self.rows = []
         if self.path.exists():
-            with open(self.path) as f:
+            with open(self.path, encoding="utf-8") as f:
                 self.rows = list(csv.DictReader(f))
 
     def add(self, **row):
         if self.path.exists():           # re-lee para fusionar con lo escrito por otros procesos
-            with open(self.path) as f:
+            with open(self.path, encoding="utf-8") as f:
                 self.rows = list(csv.DictReader(f))
         row = {k: (json.dumps(v) if isinstance(v, (dict, list)) else v) for k, v in row.items()}
         self.rows = [r for r in self.rows if not (r.get("estructura") == str(row.get("estructura"))
@@ -116,7 +116,7 @@ class Recorder:
             for k in r:
                 if k not in keys:
                     keys.append(k)
-        with open(self.path, "w", newline="") as f:
+        with open(self.path, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=keys)
             w.writeheader()
             for r in self.rows:
@@ -124,7 +124,7 @@ class Recorder:
 
 
 def save_platform():
-    with open(RESULTS / "plataforma.json", "w") as f:
+    with open(RESULTS / "plataforma.json", "w", encoding="utf-8") as f:
         json.dump(platform_info(), f, indent=1)
 
 
