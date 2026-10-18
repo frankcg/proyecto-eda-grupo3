@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import itertools
 import json
-import resource
 import time
 
 import numpy as np
 
 from harness import RESULTS, Recorder, save_platform, sizes_from_argv
+from memrss import peak_rss_mb
 
 from ecostream.graph.communities import community_stats, label_propagation, louvain, modularity, nmi
 from ecostream.pipeline import EcoStreamPipeline
@@ -29,7 +29,7 @@ def run(n):
     p.run()
     total = time.perf_counter() - t0
     s = p.summary()
-    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    rss = peak_rss_mb()
     row = dict(n=n, eventos_procesados=s["eventos_procesados"], reps=1, setup_s=round(p.setup_seconds, 2),
                run_s=round(p.run_seconds, 2), total_s=round(total, 2), throughput_ev_s=s["throughput_ev_s"],
                rss_pico_mb=round(rss, 1), ordenes_aprobadas=s["ordenes"].get("aprobado", 0),
