@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}*,*::before,*::after{box-sizing:border-box}</style>
+</head>
+<body>
+<title>Recorrido EcoStream</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: una línea de 10 estaciones (rejilla 5×2, una columna en móvil); el evento es una etiqueta de paquete que viaja por ella; debajo, la ficha de la etapa actual. */
+:root {
+  --bg: #f2f4f5;
+  --surface: #ffffff;
+  --ink: #16202a;
+  --muted: #586470;
+  --line: #d3dade;
+  --accent: #c2410c;
+  --accent-soft: #fbe8dd;
+  --ok: #15803d;
+  --ok-soft: #dcf3e3;
+  --bad: #b91c1c;
+  --bad-soft: #fbe1e1;
+  --skip: #8a949e;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151a; --surface: #172029; --ink: #e5eaee; --muted: #97a3ad; --line: #2a3641;
+    --accent: #fb8a4c; --accent-soft: #3b2417; --ok: #4ade80; --ok-soft: #16301f;
+    --bad: #f87171; --bad-soft: #3a1b1b; --skip: #6c7782; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151a; --surface: #172029; --ink: #e5eaee; --muted: #97a3ad; --line: #2a3641;
+  --accent: #fb8a4c; --accent-soft: #3b2417; --ok: #4ade80; --ok-soft: #16301f;
+  --bad: #f87171; --bad-soft: #3a1b1b; --skip: #6c7782; color-scheme: dark;
+}
+
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+.wrap {
+  max-width: 1120px; margin: 0 auto;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 22px;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; letter-spacing: -0.01em; }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 64ch; }
+.eyebrow { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.86rem; color: var(--muted); }
+.facts b { color: var(--ink); font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* selector de eventos: etiquetas de envío */
+.picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.pick {
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+  padding: 10px 12px; display: grid; gap: 2px; min-width: 0;
+}
+.pick:hover { border-color: var(--muted); }
+.pick:focus-visible, .ctl:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.pick .id { font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted); }
+.pick .t { font-weight: 600; }
+.pick .s { font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+
+/* controles */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ctl {
+  font: inherit; font-weight: 500; cursor: pointer; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 14px;
+}
+.ctl:hover:not(:disabled) { border-color: var(--muted); }
+.ctl:disabled { opacity: 0.45; cursor: default; }
+.ctl.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); min-width: 120px; }
+.progress { margin-left: auto; font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.speed { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+
+/* la línea de estaciones */
+.line {
+  position: relative; list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;
+}
+.st {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+  padding: 12px 12px 10px 12px; display: grid; gap: 2px; min-width: 0; cursor: pointer;
+  transition: border-color .25s, background-color .25s, opacity .25s;
+}
+.st .badge {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 0.78rem; font-weight: 500;
+  border: 1.5px solid var(--line); color: var(--muted); background: var(--bg); margin-bottom: 6px;
+}
+.st .nm { font-weight: 600; line-height: 1.25; }
+.st .ds { font-size: 0.8rem; color: var(--muted); line-height: 1.3; }
+.st .fija {
+  position: absolute; top: 12px; right: 10px; font-size: 0.64rem; letter-spacing: 0.1em; font-weight: 600;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 0 4px;
+}
+.st .state { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; min-height: 1.2em; margin-top: 4px; color: var(--muted); }
+.st.is-work .badge, .st.is-ok .badge, .st.is-out .badge { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+.st.is-work .state, .st.is-ok .state, .st.is-out .state { color: var(--ok); }
+.st.is-skip { border-style: dashed; }
+.st.is-skip .badge { border-style: dashed; color: var(--skip); }
+.st.is-skip .nm, .st.is-skip .ds { color: var(--skip); }
+.st.is-reject, .st.is-block { border-color: var(--bad); }
+.st.is-reject .badge, .st.is-block .badge { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+.st.is-reject .state, .st.is-block .state { color: var(--bad); }
+.st.is-never { opacity: 0.38; }
+.st.is-current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.st.is-current.is-reject, .st.is-current.is-block { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+
+/* el evento viajero */
+.token, .ghost, .alert-tok {
+  position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%;
+  pointer-events: none; z-index: 2; display: grid; place-items: center;
+  transition: transform .7s cubic-bezier(.55,.05,.25,1), opacity .4s;
+}
+.token { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft), 0 2px 8px rgba(0,0,0,.18); }
+.token::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); }
+.token.stopped { background: var(--bad); box-shadow: 0 0 0 4px var(--bad-soft); }
+.ghost { background: var(--accent); opacity: .55; box-shadow: 0 0 0 4px var(--accent-soft); }
+.ghost.gone { opacity: 0; }
+.alert-tok { background: var(--bad); box-shadow: 0 0 0 4px var(--bad-soft); color: var(--surface); font-weight: 700; font-family: var(--font-mono); font-size: .9rem; }
+.alert-tok.gone { opacity: 0; }
+.tag {
+  position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none;
+  font-family: var(--font-mono); font-size: 0.7rem; background: var(--ink); color: var(--bg);
+  padding: 1px 6px; border-radius: 3px; white-space: nowrap;
+  transition: transform .7s cubic-bezier(.55,.05,.25,1);
+}
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid; display: inline-block; }
+.dot.ok { border-color: var(--ok); background: var(--ok-soft); }
+.dot.skip { border-color: var(--skip); border-style: dashed; }
+.dot.bad { border-color: var(--bad); background: var(--bad-soft); }
+.dot.never { border-color: var(--line); opacity: .5; }
+
+/* ficha de la etapa */
+.detail { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.card h2 { font-size: 1.3rem; font-weight: 600; }
+.card h3 { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-family: var(--font-body); font-weight: 600; }
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.pill { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid; }
+.pill.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+.pill.skip { color: var(--skip); border-color: var(--skip); border-style: dashed; }
+.pill.bad { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.ds-line { color: var(--muted); font-size: 0.9rem; margin: 0; }
+.plain { margin: 0; font-size: 1.02rem; max-width: 62ch; }
+.log { margin: 0; padding: 10px 12px; background: var(--bg); border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.55; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.log .k { color: var(--accent); }
+.log.empty { color: var(--skip); font-style: italic; font-family: var(--font-body); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 0.88rem; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.what { margin: 0; font-size: 0.9rem; color: var(--muted); }
+.result { border-color: var(--accent); }
+.result ol, .result ul { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; }
+.result li { font-size: 0.92rem; }
+.result .score { font-family: var(--font-mono); color: var(--muted); font-size: 0.82rem; }
+.result.bad { border-color: var(--bad); }
+
+.foot { font-size: 0.8rem; color: var(--muted); }
+.foot code { font-family: var(--font-mono); font-size: 0.78rem; }
+
+@media (max-width: 860px) { .detail { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .line { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .st { grid-template-columns: 34px minmax(0, 1fr); column-gap: 12px; padding: 10px 12px; }
+  .st .badge { grid-row: 1 / span 3; margin: 0; }
+  .st .nm, .st .ds, .st .state { grid-column: 2; }
+  .st .fija { top: 10px; }
+  .progress { margin-left: 0; width: 100%; }
+  .tag { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .token, .ghost, .alert-tok, .tag, .st { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Grupo 3 · Escenario B: comercio electrónico</div>
+    <h1>Recorrido de un evento por EcoStream</h1>
+    <p class="lede">Elige un evento real de la demo y míralo avanzar por las 10 etapas. Cada etapa solo trabaja con los eventos que le corresponden; los demás pasan sin cambios.</p>
+  </header>
+
+  <div class="facts" aria-label="Datos de la ejecución">
+    <span>Eventos generados <b>306 000</b></span>
+    <span>Procesados tras limpieza <b>299 696</b></span>
+    <span>Throughput <b>6 534 ev/s</b></span>
+    <span>Semilla <b>42</b></span>
+  </div>
+
+  <div class="picker" id="picker" role="group" aria-label="Evento a seguir"></div>
+
+  <div class="controls">
+    <button class="ctl" id="prev" type="button">◀ Anterior</button>
+    <button class="ctl primary" id="play" type="button">▶ Reproducir</button>
+    <button class="ctl" id="next" type="button">Siguiente ▶</button>
+    <button class="ctl" id="restart" type="button">Reiniciar</button>
+    <label class="speed" for="speed">Velocidad
+      <select id="speed">
+        <option value="0.6">Lenta</option>
+        <option value="1" selected>Normal</option>
+        <option value="1.8">Rápida</option>
+      </select>
+    </label>
+    <span class="progress" id="progress" aria-live="polite"></span>
+  </div>
+
+  <ol class="line" id="line" aria-label="Etapas del pipeline"></ol>
+
+  <div class="legend">
+    <span><i class="dot ok"></i>Trabaja con el evento</span>
+    <span><i class="dot skip"></i>Pasa sin cambios</span>
+    <span><i class="dot bad"></i>Rechazado o bloqueado</span>
+    <span><i class="dot never"></i>No llega</span>
+  </div>
+
+  <section class="detail">
+    <article class="card" id="card" aria-live="polite"></article>
+    <aside class="card" id="side"></aside>
+  </section>
+
+  <p class="foot">Trazas tomadas de <code>docs/demo_output.txt</code>, generado con <code>python scripts/demo.py</code> (300 000 eventos, 20 000 productos, semilla 42). Teclado: ← → para avanzar, espacio para reproducir.</p>
+</div>
+
+<script>
+const STAGES = [
+  { k: "E0", name: "Ingesta", ds: "Cola FIFO con lista enlazada", demo: "306 000 eventos",
+    what: "Los eventos hacen fila en orden de llegada y salen en micro-lotes de ~5 000." },
+  { k: "E1", name: "Limpieza", ds: "Merge Sort + búsqueda binaria", demo: "306 000 → 299 696",
+    what: "Valida y normaliza campos, rechaza registros sucios y elimina duplicados." },
+  { k: "E2", name: "Prioridades", ds: "Min-heap binario", demo: "299 696 eventos",
+    what: "Atiende primero lo urgente: alerta > pago > express/premium > … > vista." },
+  { k: "E3", name: "Almacenamiento", ds: "Tabla hash + LRU + matriz dispersa", demo: "299 696 eventos",
+    what: "Busca producto y usuario en O(1), con caché de los más usados, y registra la interacción." },
+  { k: "E4", name: "Indexación", ds: "B+Tree en disco", demo: "10 498 órdenes",
+    what: "Archiva las órdenes en páginas de 4 KB; permite consultas por rango de tiempo y precio." },
+  { k: "E5", name: "Vecinos por atributos", ds: "KD-Tree 4D + KNN exacto", demo: "246 430 eventos",
+    what: "Encuentra los productos con precio, rating, popularidad y descuento más parecidos." },
+  { k: "E6", name: "Antifraude", ds: "Bloom Filter + Count-Min Sketch", demo: "10 881 pagos", fija: true,
+    what: "Bloom: ¿la tarjeta está en la lista negra? (se verifica en la tabla exacta). CMS: ¿más de 15 intentos en 5 min?" },
+  { k: "E7", name: "Similitud", ds: "MinHash + LSH y HNSW", demo: "22 756 compras", fija: true,
+    what: "Productos parecidos por comportamiento (LSH, Jaccard) y por contenido (HNSW, coseno)." },
+  { k: "E8", name: "Grafo de co-compra", ds: "PageRank + Louvain", demo: "se reconstruye cada 20 lotes", fija: true,
+    what: "Une productos comprados en la misma orden; calcula influencia y comunidades." },
+  { k: "E9", name: "Servicio", ds: "Trie, Top-K y panel", demo: "7 consultas",
+    what: "Autocompletado, recomendaciones Top-K, alertas y panel de métricas." },
+];
+
+const STATE_LABEL = { work: "Trabaja", ok: "Aprobado", out: "Salida", skip: "Sin cambios", reject: "Rechazado", block: "Bloqueado", never: "No llega" };
+const PILL = { work: "ok", ok: "ok", out: "ok", skip: "skip", reject: "bad", block: "bad", alert: "bad" };
+
+const EVENTS = [
+  {
+    id: 150084, title: "Compra express", sub: "Juguete Lego O46 · S/ 109.25",
+    steps: [
+      { s: 0, st: "work", plain: "Llega al final de la fila y sale junto con otros 5 651 eventos en un mismo micro-lote.",
+        log: ["encolado en FIFO (posición 4920)", "desencolado en micro-lote de 5652"] },
+      { s: 1, st: "work", plain: "Sus campos son válidos y su id no está entre los 145 123 ya vistos: no es un duplicado.",
+        log: ["validado/normalizado, único (búsqueda binaria en 145123 ids recientes), reordenado por tiempo"] },
+      { s: 2, st: "work", plain: "Es una compra express: prioridad 2 de 9. Sale del heap en el mismo turno, sin esperar.",
+        log: ["insertado en heap con prioridad 2 (compra_express/premium); heap=5655", "extraído del heap tras esperar 0 ticks"] },
+      { s: 3, st: "work", plain: "Busca el producto en la tabla hash, primero en la caché de los más usados, y anota que este usuario compró este juguete.",
+        log: ["lookup O(1) en hash table vía LRU (hit-rate 52%), perfil de usuario e interacción en matriz dispersa actualizados; producto 'Juguete Lego O46' (S/ 109.25)"] },
+      { s: 4, st: "work", plain: "La orden 5228 se archiva en el B+Tree. Con altura 2, encontrarla cuesta solo 2 lecturas de disco.",
+        log: ["orden 5228 indexada en B+Tree (altura 2, 51 páginas de 4 KB)"] },
+      { s: 5, st: "work", plain: "Busca los 5 productos cuyos atributos se parecen más a los de este juguete.",
+        log: ["KD-Tree: 5 productos con atributos más cercanos [10733, 3722, 17878, 8360, 5690]"] },
+      { s: 6, st: "ok", plain: "El pago de la orden no está en la lista negra y no supera 15 intentos en 5 minutos: se aprueba.",
+        log: ["orden en estado 'APROBADO' (su intento de pago pasó por Bloom + verificación exacta y CMS); compra contada en el CMS de tendencias (~1 en la última hora)"] },
+      { s: 7, st: "work", plain: "La compra se suma a los compradores del producto. LSH encuentra productos que compra la misma gente; HNSW, productos con características parecidas.",
+        log: ["compra aprobada alimenta los conjuntos de compradores; similares por comportamiento (LSH) [2998, 2076, 3404] y por contenido (HNSW) [4973, 1678, 8990]"] },
+      { s: 8, st: "work", plain: "En la próxima reconstrucción, sus productos se conectan en la red de co-compra, donde se calculan PageRank y comunidades.",
+        log: ["orden 5228 entra al grafo de co-compra en la siguiente reconstrucción (ventana 7 días vía range scan del B+Tree)"] },
+      { s: 9, st: "out", plain: "Resultado final: el comprador recibe 5 recomendaciones que combinan KD-Tree, LSH, HNSW y PageRank personalizado.",
+        log: ["Top-5 recomendado al usuario: Mouse Hp X319 (0.22), Mouse Apple U883 (0.15), Juguete Fisherprice H268 (0.14), Juguete Fisherprice J432 (0.14), Juguete Fisherprice S76 (0.14)"] },
+    ],
+    result: { kind: "ok", title: "Recomendaciones Top-5", items: [["Mouse Hp X319", "0.22"], ["Mouse Apple U883", "0.15"], ["Juguete Fisherprice H268", "0.14"], ["Juguete Fisherprice J432", "0.14"], ["Juguete Fisherprice S76", "0.14"]] },
+  },
+  {
+    id: 150045, title: "Vista de producto", sub: "Monitor Lg S811 · S/ 489.86",
+    steps: [
+      { s: 0, st: "work", plain: "Entra a la fila y sale en el mismo micro-lote de 5 652 eventos.", log: ["encolado en FIFO (posición 4881)", "desencolado en micro-lote de 5652"] },
+      { s: 1, st: "work", plain: "Campos válidos y sin duplicado.", log: ["validado/normalizado, único (búsqueda binaria en 145123 ids recientes), reordenado por tiempo"] },
+      { s: 2, st: "work", plain: "Una vista no es urgente: prioridad 8, la más baja. Espera 1 turno mientras se atienden pagos y compras.",
+        log: ["insertado en heap con prioridad 8 (vista/busqueda); heap=5655", "extraído del heap tras esperar 1 ticks"] },
+      { s: 3, st: "work", plain: "Busca el monitor en la tabla hash y registra que este usuario lo miró.",
+        log: ["lookup O(1) en hash table vía LRU (hit-rate 52%), perfil de usuario e interacción en matriz dispersa actualizados; producto 'Monitor Lg S811' (S/ 489.86)"] },
+      { s: 4, st: "skip", plain: "Mirar un producto no crea una orden: no hay nada que archivar." },
+      { s: 5, st: "work", plain: "Busca los 5 productos con atributos más parecidos al monitor.", log: ["KD-Tree: 5 productos con atributos más cercanos [9734, 19848, 5565, 7920, 3940]"] },
+      { s: 6, st: "skip", plain: "No hay pago: no hay fraude que revisar." },
+      { s: 7, st: "skip", plain: "Solo las compras aprobadas alimentan los índices de similitud." },
+      { s: 8, st: "skip", plain: "Solo las órdenes aprobadas entran al grafo de co-compra." },
+      { s: 9, st: "out", plain: "Aunque no compró, el usuario recibe recomendaciones según lo que mira.",
+        log: ["Top-5 recomendado al usuario: Cargador Apple O869 (0.39), Smartwatch Motorola U986 (0.39), Audífonos Apple G242 (0.39), Funda Huawei G324 (0.37), Smartphone Motorola O419 (0.26)"] },
+    ],
+    result: { kind: "ok", title: "Recomendaciones Top-5", items: [["Cargador Apple O869", "0.39"], ["Smartwatch Motorola U986", "0.39"], ["Audífonos Apple G242", "0.39"], ["Funda Huawei G324", "0.37"], ["Smartphone Motorola O419", "0.26"]] },
+  },
+  {
+    id: 56098, title: "Pago fraudulento", sub: "Ráfaga de card testing",
+    steps: [
+      { s: 0, st: "work", plain: "Entra a la fila como cualquier otro evento.", log: ["encolado en FIFO (posición 44)", "desencolado en micro-lote de 6688"] },
+      { s: 1, st: "work", plain: "Sus campos son válidos: la limpieza no detecta fraude, solo errores de formato.", log: ["validado/normalizado, único (búsqueda binaria en 55985 ids recientes), reordenado por tiempo"] },
+      { s: 2, st: "work", plain: "Es un pago: prioridad 1. Se atiende de inmediato.", log: ["insertado en heap con prioridad 1 (pago); heap=7538", "extraído del heap tras esperar 0 ticks"] },
+      { s: 3, st: "work", plain: "No tiene producto; se consulta y actualiza la tabla hash de órdenes y pagos.", log: ["evento de pago sin producto: se consulta/actualiza la tabla hash de órdenes y pagos"] },
+      { s: 4, st: "skip", plain: "Un intento de pago no crea una orden nueva que archivar." },
+      { s: 5, st: "skip", plain: "No tiene producto: no hay vecinos que buscar." },
+      { s: 6, st: "block", plain: "El Count-Min Sketch estima ~18 intentos de este dispositivo en 5 minutos (umbral: 15). Además, el Bloom dice que la tarjeta podría estar en la lista negra y la tabla exacta lo confirma. Se bloquea.",
+        log: ["Bloom/CMS: estimación ventana=18, decisión=BLOQUEADO velocidad: ~18 intentos en 5 min (umbral 15); además token de pago en lista negra (positivo del Bloom verificado)"] },
+      { s: 6, st: "block", alert: true, plain: "E6 genera una alerta nueva y la devuelve al heap de E2 con prioridad 0, la máxima: se atiende antes que cualquier otro evento.",
+        log: ["alerta re-inyectada en E2 con prioridad 0 y atendida antes que el resto", "(espera promedio de las alertas en la demo: 0 ticks)"] },
+      { s: 7, st: "skip", plain: "Un pago bloqueado no es una compra aprobada: similitud lo deja pasar sin cambios." },
+      { s: 8, st: "skip", plain: "Tampoco entra al grafo: solo cuentan las órdenes aprobadas." },
+      { s: 9, st: "out", plain: "La alerta aparece en el panel de alertas de fraude del dashboard.", log: ["reflejado en el panel de alertas/actividad"] },
+    ],
+    result: { kind: "bad", title: "Alerta en el panel", text: "Pago bloqueado: ~18 intentos en 5 min (umbral 15) y tarjeta en lista negra verificada. En toda la demo: 6 alertas de velocidad, 43 órdenes bloqueadas y 0 bloqueos por falso positivo del Bloom." },
+  },
+  {
+    id: 150639, title: "Registro sucio", sub: "Precio negativo",
+    rejectAt: 1,
+    steps: [
+      { s: 0, st: "work", plain: "La fila no revisa contenido: el registro entra como cualquier otro.", log: ["encolado en FIFO (posición 5488)", "desencolado en micro-lote de 5652"] },
+      { s: 1, st: "reject", plain: "El precio es negativo: el registro no es válido y se descarta aquí. No llega a ninguna etapa más.", log: ["rechazado: precio_negativo"] },
+    ],
+    result: { kind: "bad", title: "Descartado en E1", text: "El 0,5 % de los registros llega sucio (precio negativo, faltante o con coma, tipo o categoría mal escritos). Los que no se pueden corregir se rechazan antes de llegar al heap." },
+  },
+  {
+    id: 152465, title: "Evento duplicado", sub: "Vista de Zapatillas Levis S801", dup: true,
+    steps: [
+      { s: 0, st: "work", plain: "La misma vista llegó dos veces (re-entrega de la red). Las dos copias entran a la fila.",
+        log: ["encolado en FIFO (posición 1692)", "encolado en FIFO (posición 1696)", "desencolado en micro-lote de 5915", "desencolado en micro-lote de 5915"] },
+      { s: 1, st: "work", plain: "Al ordenar el lote por id, las dos copias quedan juntas y se descarta una. La otra sigue.",
+        log: ["copia duplicada eliminada: Merge Sort por event_id + descarte de adyacentes iguales (O(b log b))", "validado/normalizado, único (búsqueda binaria en 150651 ids recientes), reordenado por tiempo"] },
+      { s: 2, st: "work", plain: "Es una vista: prioridad 8.", log: ["insertado en heap con prioridad 8 (vista/busqueda); heap=6461", "extraído del heap tras esperar 0 ticks"] },
+      { s: 3, st: "work", plain: "Busca las zapatillas en la tabla hash y registra la interacción una sola vez.",
+        log: ["lookup O(1) en hash table vía LRU (hit-rate 52%), perfil de usuario e interacción en matriz dispersa actualizados; producto 'Zapatillas Levis S801' (S/ 497.87)"] },
+      { s: 4, st: "skip", plain: "Es una vista: no hay orden que archivar." },
+      { s: 5, st: "work", plain: "Busca los 5 productos con atributos más parecidos.", log: ["KD-Tree: 5 productos con atributos más cercanos [12709, 4032, 1651, 18935, 15766]"] },
+      { s: 6, st: "skip", plain: "No hay pago que revisar." },
+      { s: 7, st: "skip", plain: "Solo las compras aprobadas alimentan la similitud." },
+      { s: 8, st: "skip", plain: "Solo las órdenes aprobadas entran al grafo." },
+      { s: 9, st: "out", plain: "Recomendaciones para el usuario, contando su vista una sola vez.",
+        log: ["Top-5 recomendado al usuario: Laptop Lg D108 (0.23), Zapatillas Puma Z212 (0.14), Laptop Lg I558 (0.14), Laptop Apple N500 (0.14), Laptop Apple I702 (0.13)"] },
+    ],
+    result: { kind: "ok", title: "Recomendaciones Top-5", items: [["Laptop Lg D108", "0.23"], ["Zapatillas Puma Z212", "0.14"], ["Laptop Lg I558", "0.14"], ["Laptop Apple N500", "0.14"], ["Laptop Apple I702", "0.13"]] },
+  },
+];
+
+const $ = (id) => document.getElementById(id);
+const line = $("line"), card = $("card"), side = $("side");
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// estaciones
+STAGES.forEach((st, i) => {
+  const li = document.createElement("li");
+  li.className = "st";
+  li.dataset.i = i;
+  li.innerHTML = `<span class="badge">${st.k}</span><span class="nm">${st.name}</span><span class="ds">${st.ds}</span>` +
+    (st.fija ? `<span class="fija">FIJA</span>` : "") + `<span class="state"></span>`;
+  li.addEventListener("click", () => jumpToStage(i));
+  line.appendChild(li);
+});
+const token = document.createElement("div"); token.className = "token"; token.setAttribute("aria-hidden", "true");
+const ghost = document.createElement("div"); ghost.className = "ghost"; ghost.setAttribute("aria-hidden", "true"); ghost.hidden = true;
+const alertTok = document.createElement("div"); alertTok.className = "alert-tok"; alertTok.textContent = "!"; alertTok.setAttribute("aria-hidden", "true"); alertTok.hidden = true;
+const tag = document.createElement("div"); tag.className = "tag"; tag.setAttribute("aria-hidden", "true");
+line.append(ghost, token, alertTok, tag);
+const stations = [...line.querySelectorAll(".st")];
+
+// selector
+const picker = $("picker");
+EVENTS.forEach((ev, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "pick"; b.id = "pick-" + ev.id;
+  b.innerHTML = `<span class="id">event_id ${ev.id}</span><span class="t">${ev.title}</span><span class="s">${ev.sub}</span>`;
+  b.addEventListener("click", () => selectEvent(i));
+  picker.appendChild(b);
+});
+
+let cur = 0, step = 0, playing = false, timer = null;
+
+function badgePos(i, dx = 0, dy = 0) {
+  const lr = line.getBoundingClientRect();
+  const br = stations[i].querySelector(".badge").getBoundingClientRect();
+  return { x: br.left - lr.left + dx, y: br.top - lr.top + dy };
+}
+function place(el, i, dx = 0, dy = 0, instant = false) {
+  const p = badgePos(i, dx, dy);
+  if (instant) el.style.transition = "none";
+  el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+  if (instant) { void el.offsetWidth; el.style.transition = ""; }
+}
+function placeTag(i, instant) {
+  const p = badgePos(i, 40, 8);
+  if (instant) tag.style.transition = "none";
+  tag.style.transform = `translate(${p.x}px, ${p.y}px)`;
+  if (instant) { void tag.offsetWidth; tag.style.transition = ""; }
+}
+
+function statusMap(ev, n) {
+  const m = {};
+  for (let j = 0; j <= n; j++) m[ev.steps[j].s] = ev.steps[j].st;
+  if (ev.rejectAt !== undefined && n >= ev.steps.length - 1) {
+    for (let i = ev.rejectAt + 1; i < STAGES.length; i++) m[i] = "never";
+  }
+  return m;
+}
+
+function render(instant = false) {
+  const ev = EVENTS[cur], sp = ev.steps[step], last = step === ev.steps.length - 1;
+  const m = statusMap(ev, step);
+  stations.forEach((el, i) => {
+    el.className = "st" + (m[i] ? " is-" + m[i] : "") + (i === sp.s ? " is-current" : "");
+    el.querySelector(".state").textContent = m[i] ? STATE_LABEL[m[i]] : "";
+  });
+
+  // evento principal
+  token.classList.toggle("stopped", sp.st === "reject");
+  place(token, sp.s, 0, 0, instant);
+  tag.textContent = ev.id;
+  placeTag(sp.s, instant);
+
+  // copia duplicada
+  if (ev.dup && sp.s <= 1) {
+    ghost.hidden = false;
+    if (sp.s === 0) { ghost.classList.remove("gone"); place(ghost, 0, 10, 10, true); }
+    else { place(ghost, 1, 10, 10, instant); ghost.classList.add("gone"); }
+  } else { ghost.hidden = true; ghost.classList.remove("gone"); }
+
+  // alerta re-inyectada en E2
+  if (sp.alert) {
+    alertTok.hidden = false; alertTok.classList.remove("gone");
+    place(alertTok, 6, 0, 0, true);
+    requestAnimationFrame(() => requestAnimationFrame(() => place(alertTok, 2, 0, 0, reduced)));
+  } else { alertTok.hidden = true; }
+
+  // ficha
+  const S = STAGES[sp.s];
+  const pillTxt = sp.alert ? "Alerta re-inyectada" : STATE_LABEL[sp.st];
+  const pillCls = sp.alert ? "bad" : (PILL[sp.st] || "skip");
+  const logHtml = sp.log
+    ? `<pre class="log">${sp.log.map((l) => `<span class="k">[${sp.alert && l.startsWith("alerta") ? "E2" : S.k}]</span> ${esc(l)}`).join("\n")}</pre>`
+    : `<p class="log empty">Sin línea en la traza: esta etapa no hace nada con este tipo de evento.</p>`;
+  card.innerHTML = `
+    <div class="head"><h2>${S.k} · ${S.name}</h2><span class="pill ${pillCls}">${pillTxt}</span></div>
+    <p class="ds-line">${S.ds}</p>
+    <p class="plain">${esc(sp.plain)}</p>
+    <h3>Traza real de la demo</h3>
+    ${logHtml}`;
+
+  if (last) {
+    const r = ev.result;
+    side.className = "card result" + (r.kind === "bad" ? " bad" : "");
+    side.innerHTML = `<h3>Salida observable</h3><h2>${r.title}</h2>` +
+      (r.items ? `<ol>${r.items.map(([n, s]) => `<li>${esc(n)} <span class="score">${s}</span></li>`).join("")}</ol>` : `<p class="what">${esc(r.text)}</p>`);
+  } else {
+    side.className = "card";
+    side.innerHTML = `<h3>Qué hace esta etapa</h3><p class="what">${S.what}</p>
+      <dl class="kv"><dt>Estructura</dt><dd>${S.ds}</dd><dt>En la demo</dt><dd>${S.demo}</dd></dl>`;
+  }
+
+  $("progress").textContent = `Paso ${step + 1} de ${ev.steps.length}`;
+  $("prev").disabled = step === 0;
+  $("next").disabled = last;
+  [...picker.children].forEach((b, i) => b.setAttribute("aria-pressed", String(i === cur)));
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function go(n) { const ev = EVENTS[cur]; step = Math.max(0, Math.min(ev.steps.length - 1, n)); render(); }
+function selectEvent(i) { stop(); cur = i; step = 0; render(true); }
+function jumpToStage(i) {
+  stop();
+  const ev = EVENTS[cur];
+  const idx = ev.steps.findIndex((s) => s.s === i);
+  if (idx >= 0) go(idx);
+}
+
+function tick() {
+  const ev = EVENTS[cur];
+  if (step >= ev.steps.length - 1) { stop(); return; }
+  go(step + 1);
+  const speed = parseFloat($("speed").value) || 1;
+  const extra = ev.steps[step].alert ? 600 : 0;
+  timer = setTimeout(tick, (1700 + extra) / speed);
+}
+function play() {
+  if (step >= EVENTS[cur].steps.length - 1) { step = 0; render(true); }
+  playing = true; $("play").textContent = "❚❚ Pausar";
+  const speed = parseFloat($("speed").value) || 1;
+  timer = setTimeout(tick, 600 / speed);
+}
+function stop() { playing = false; clearTimeout(timer); $("play").textContent = "▶ Reproducir"; }
+
+$("play").addEventListener("click", () => (playing ? stop() : play()));
+$("next").addEventListener("click", () => { stop(); go(step + 1); });
+$("prev").addEventListener("click", () => { stop(); go(step - 1); });
+$("restart").addEventListener("click", () => { stop(); step = 0; render(true); });
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest && e.target.closest("select")) return;
+  if (e.key === "ArrowRight") { stop(); go(step + 1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { stop(); go(step - 1); e.preventDefault(); }
+  else if (e.key === " " && !(e.target.closest && e.target.closest("button"))) { playing ? stop() : play(); e.preventDefault(); }
+});
+new ResizeObserver(() => render(true)).observe(line);
+
+render(true);
+</script>
+
+</body>
+</html>
