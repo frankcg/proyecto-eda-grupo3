@@ -18,7 +18,6 @@ Pipeline de **10 etapas** en el que cada etapa usa la estructura de datos más a
 | Demo de punta a punta (3-4 min) | `scripts/demo.py` → `docs/demo_output.txt`, `docs/dashboard.html` |
 | Experimentos (1K a 10M) y resultados | `experiments/bench_*.py`, `experiments/results/*.csv`, `experiments/figures/*.png` |
 | Pruebas de corrección | `tests/test_structures.py` (14 pruebas contra dict, heapq, bisect, fuerza bruta y networkx) |
-| Presentación | `docs/presentacion/` (diapositivas y guion de la demo) |
 
 ## Tabla de roles y contribución individual
 
